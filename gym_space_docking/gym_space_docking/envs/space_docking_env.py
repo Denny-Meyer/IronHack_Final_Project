@@ -13,6 +13,13 @@ class SpaceObject(pygame.sprite.Sprite):
         self.pos_y = 0.0
         self.rot_angle = 0.0
         self.rot_mov = 0.0
+    
+    def rot_center(self, image, angle):
+    
+        loc = image.get_rect().center  #rot_image is not defined 
+        rot_sprite = pygame.transform.rotate(image, angle)
+        rot_sprite.get_rect().center = loc
+        return rot_sprite
 
 
 class Ship(SpaceObject):
@@ -39,8 +46,9 @@ class Asteroid(SpaceObject):
         #print(self.coord)
     
     def update(self):
-        self.surf = transform.rotate(self.image, self.rotation_angle)
-        self.rect = self.image.get_rect()
+        self.surf = self.rot_center(self.image, self.rotation_angle)
+        #self.surf = transform.rotate(self.image, self.rotation_angle)
+        #self.rect = self.image.get_rect()
         self.rotation_angle += 0.1
         pass
 
