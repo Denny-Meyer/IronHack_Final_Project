@@ -1,6 +1,14 @@
 import pygame
-import numpy as np
+from pygame import transform
+from pygame.locals import *
+
 import gym
+from gym import error, spaces, utils
+from gym.utils import seeding
+
+import numpy as np
+import math, sys, os, copy, time, random
+
 
 window_width, window_height = 1000, 500
 rotation_max, acceleration_max = 0.08, 0.5
@@ -16,7 +24,6 @@ class Space_Docking_Env(gym.Env):
         self.vel_y = 0.
 
     def init_render(self):
-        import pygame
         pygame.init()
         self.window = pygame.display.set_mode((window_width, window_height))
         self.clock = pygame.time.Clock()
@@ -72,13 +79,14 @@ class Space_Docking_Env(gym.Env):
 def pressed_to_action(keytouple):
     action_turn = 0.
     action_acc = 0.
-    if keytouple[274] == 1:  # back
+
+    if keytouple[K_DOWN] == 1:
         action_acc -= 1
-    if keytouple[273] == 1:  # forward
+    if keytouple[K_UP] == 1:  # forward
         action_acc += 1
-    if keytouple[276] == 1:  # left  is -1
+    if keytouple[K_LEFT] == 1:  # left  is -1
         action_turn += 1
-    if keytouple[275] == 1:  # right is +1
+    if keytouple[K_RIGHT] == 1:  # right is +1
         action_turn -= 1
     # ─── KEY IDS ─────────
     # arrow forward   : 273
@@ -92,15 +100,17 @@ environment.init_render()
 run = True
 while run:
     # set game speed to 30 fps
-    environment.clock.tick(30)
+    environment.clock.tick(40)
     # ─── CONTROLS ───────────────────────────────────────────────────────────────────
     # end while-loop when window is closed
     get_event = pygame.event.get()
+    
     for event in get_event:
         if event.type == pygame.QUIT:
             run = False
     # get pressed keys, generate action
     get_pressed = pygame.key.get_pressed()
+            
     action = pressed_to_action(get_pressed)
     # calculate one step
     environment.step(action)
@@ -112,17 +122,6 @@ pygame.quit()
 
 
 
-
-
-import math, pygame, sys, os, copy, time, random
-from pygame import transform
-from pygame.locals import *
-
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-
-pygame.init()
 
 
 class SpaceObject(pygame.sprite.Sprite):
@@ -228,10 +227,3 @@ class Game:
             pygame.display.flip()
 
             self.clock.tick(60)
-            
-            
-
-
-#if __name__ == "__main__":
-#    Game().run_gameloop()
-#    print('run file')
