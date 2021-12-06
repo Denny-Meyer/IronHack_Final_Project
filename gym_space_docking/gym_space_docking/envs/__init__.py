@@ -1,5 +1,1 @@
-from gym.envs.registration import register
- 
-register(id='Space_Docking-v0', 
-    entry_point='gym_space_docking.envs:SpaceDockingEnv', 
-)
+from gym_space_docking.envs.space_docking_env import Space_Docking_Env

@@ -1,6 +1,5 @@
-from setuptools import setup
+from gym.envs.registration import register
  
-setup(name='gym_space_docking,
-      version='0.1',
-      install_requires=['gym', 'numpy', 'pygame']
+register(id='space_docking-v0', 
+    entry_point='gym_space_docking.envs:Space_Docking_Env', 
 )
