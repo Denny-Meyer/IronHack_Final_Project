@@ -9,8 +9,9 @@ from gym.utils import seeding
 import numpy as np
 import math, sys, os, copy, time, random
 
+from gym_space_docking.envs.space_objects import *
 
-window_width, window_height = 1000, 500
+window_width, window_height = 1200, 800
 rotation_max, acceleration_max = 0.08, 0.5
 
 class Space_Docking_Env(gym.Env):
@@ -27,6 +28,8 @@ class Space_Docking_Env(gym.Env):
         pygame.init()
         self.window = pygame.display.set_mode((window_width, window_height))
         self.clock = pygame.time.Clock()
+        self.player = Ship()
+        self.astro = Asteroid()
 
     def reset(self):
         # reset the environment to initial state
@@ -44,9 +47,9 @@ class Space_Docking_Env(gym.Env):
             
         # ─── APPLY ACCELERATION ──────────────────────────────────────────
         acceleration = action[0]
-        # backwards acceleration at half thrust
+        # backwards acceleration at quarter thrust
         if acceleration < 0:
-            acceleration = acceleration * 0.5
+            acceleration = acceleration * 0.25
         self.vel_x = self.vel_x + acceleration_max * acceleration * np.cos(self.ang)
         self.vel_y = self.vel_y - acceleration_max * acceleration * np.sin(self.ang)
         
@@ -69,8 +72,13 @@ class Space_Docking_Env(gym.Env):
     
     def render(self):
         self.window.fill((0,0,0))
+        
+        self.window.blit(self.astro.surf, self.astro.rect)
+        self.window.blit(self.player.surf, self.player.rect)
+
         pygame.draw.circle(self.window, (0, 200, 200), (int(self.x), int(self.y)), 6)
         # draw orientation
+        
         p1 = (self.x - 10 * np.cos(self.ang),self.y + 10 * np.sin(self.ang))
         p2 = (self.x + 15 * np.cos(self.ang),self.y - 15 * np.sin(self.ang))
         pygame.draw.line(self.window,(0,100,100),p1,p2,2)
@@ -98,9 +106,11 @@ def pressed_to_action(keytouple):
 environment = Space_Docking_Env()
 environment.init_render()
 run = True
+
+
 while run:
     # set game speed to 30 fps
-    environment.clock.tick(40)
+    environment.clock.tick(60)
     # ─── CONTROLS ───────────────────────────────────────────────────────────────────
     # end while-loop when window is closed
     get_event = pygame.event.get()
@@ -120,110 +130,3 @@ pygame.quit()
 
 
 
-
-
-
-
-class SpaceObject(pygame.sprite.Sprite):
-
-    def __init__(self) -> None:
-        super(SpaceObject, self).__init__()
-        self.pos_x = 0.0
-        self.pos_y = 0.0
-        self.rot_angle = 0.0
-        self.rot_mov = 0.0
-    
-    def rot_center(self, image, angle):
-    
-        loc = image.get_rect().center  #rot_image is not defined 
-        rot_sprite = pygame.transform.rotate(image, angle)
-        rot_sprite.get_rect().center = loc
-        return rot_sprite
-
-
-class Ship(SpaceObject):
-
-    def __init__(self):
-        super(Ship, self).__init__()
-        self.surf = pygame.image.load("assets/med_ship_01.png").convert_alpha()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
-    
-    def update(self):
-        self.rect = self.rect.move(1, 0)
-
-
-class Asteroid(SpaceObject):
-    def __init__(self):
-        super(Asteroid, self).__init__()
-        self.image = pygame.image.load("assets/asteroid_large_0.png").convert_alpha()
-        self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect()
-        self.rotation_angle = 0
-        self.surf = transform.rotate(self.image, self.rotation_angle)
-        self.coord = self.rect
-        #print(self.coord)
-    
-    def update(self):
-        self.surf = self.rot_center(self.image, self.rotation_angle)
-        #self.surf = transform.rotate(self.image, self.rotation_angle)
-        #self.rect = self.image.get_rect()
-        self.rotation_angle += 0.1
-        pass
-
-
-class DockingSpot(SpaceObject):
-    pass
-
-
-
-
-class Game:
-
-    def __init__(self) -> None:
-        self.running = True
-        self.SCREEN_WIDTH = 1200
-        self.SCREEN_HEIGHT = 800
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        self.clock = pygame.time.Clock()
-        self.delta = 0.0
-
-
-    def create_level(self):
-        pass
-
-    def run_gameloop(self):
-        player = Ship()
-        astro = Asteroid()
-        all_sprites = pygame.sprite.Group()
-        all_sprites.add(astro)
-        all_sprites.add(player)
-
-        while self.running:
-            
-            
-            # Look at every event in the queue
-            for event in pygame.event.get():
-                # Did the user hit a key?
-                if event.type == KEYDOWN:
-                    # Was it the Escape key? If so, stop the loop.
-                    if event.key == K_ESCAPE:
-                        self.running = False
-
-                # Did the user click the window close button? If so, stop the loop.
-                elif event.type == QUIT:
-                    self.running = False
-            
-            self.screen.fill((0,0,0))
-
-            for elem in all_sprites:
-                elem.update()
-                print(elem.pos_x)
-
-
-            self.screen.blit(astro.surf, astro.rect)
-            self.screen.blit(player.surf, player.rect)
-
-            pygame.display.flip()
-
-            self.clock.tick(60)
