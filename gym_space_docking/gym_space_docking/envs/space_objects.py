@@ -13,15 +13,28 @@ class SpaceObject(pygame.sprite.Sprite):
         self.vel_y = 0.0
         self.rot_angle = 0.0
         self.rot_vel = 0.0
+        self.image = None
+        self.surf = None
+        self.rect = None
     
+    def set_offset(self):
+        self.pos_x = int(self.surf.get_width()/2)
+        self.pos_y = int(self.surf.get_height()/2)
+        print(self.pos_x, self.pos_y)
 
-    def rot_center(self, image, angle):
-        loc = image.get_rect().center  #rot_image is not defined 
-        rot_sprite = pygame.transform.rotate(image, angle)
-        rot_sprite.get_rect().center = loc
-        return rot_sprite
+    def rot_center(self):
+        rot_sprite = pygame.transform.rotate(self.image, self.rot_angle)
+        self.surf = rot_sprite
+        
+        
     
     def transform(self, direction):
+        pass
+    
+    def update(self):
+        self.rot_center()
+        
+        self.rot_angle += self.rot_vel
         pass
 
 
@@ -29,31 +42,21 @@ class Ship(SpaceObject):
 
     def __init__(self):
         super(Ship, self).__init__()
-        self.surf = pygame.image.load("assets/med_ship_01.png").convert_alpha()
-        #self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
-    
-    def update(self):
-        self.rect = self.rect.move(1, 0)
+        self.image = pygame.image.load("assets/med_ship_01.png").convert_alpha()
+        self.surf = self.image
+        self.set_offset()
+        #self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+        #self.rect = self.surf.get_rect()
 
 
 class Asteroid(SpaceObject):
     def __init__(self):
         super(Asteroid, self).__init__()
         self.image = pygame.image.load("assets/asteroid_large_0.png").convert_alpha()
-        #self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect()
-        self.rotation_angle = 0
-        self.surf = transform.rotate(self.image, self.rotation_angle)
-        self.coord = self.rect
-        #print(self.coord)
+        self.surf = self.image
+        self.set_offset()
+        #self.rect = self.surf.get_rect()
     
-    def update(self):
-        self.surf = self.rot_center(self.image, self.rotation_angle)
-        #self.surf = transform.rotate(self.image, self.rotation_angle)
-        #self.rect = self.image.get_rect()
-        self.rotation_angle += 0.1
-        pass
 
 
 class DockingSpot(SpaceObject):

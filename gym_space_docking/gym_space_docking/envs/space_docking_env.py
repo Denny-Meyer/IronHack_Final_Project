@@ -13,6 +13,7 @@ from gym_space_docking.envs.space_objects import *
 
 window_width, window_height = 1200, 800
 rotation_max, acceleration_max, retro_max = 0.08, 0.05, 0.025
+SCREENFLAGS = pygame.RESIZABLE #| pygame.OPENGL
 
 class Space_Docking_Env(gym.Env):
     def __init__(self,env_config={}):
@@ -26,16 +27,21 @@ class Space_Docking_Env(gym.Env):
 
     def init_render(self):
         pygame.init()
-        self.window = pygame.display.set_mode(size=(window_width, window_height))#,flags=pygame.RESIZABLE)
+        self.window = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS, vsync=True)
         self.clock = pygame.time.Clock()
+        self.clock.tick(30)
         self.player = Ship()
         self.astro = Asteroid()
-
+        self.astro.rot_vel = 0.001
+        self.astro.pos_y = 100
+        self.astro.pos_x = 200
+        self.player.pos_x = self.x
+        self.player.pos_y = self.y
     def reset(self):
         # reset the environment to initial state
         return observation
 
-    def step(self, action=np.zeros((3),dtype=np.float)):
+    def step(self, action=np.zeros((3),dtype=np.float32)):
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         
         # ─── APPLY ROTATION ──────────────────────────────────────────────
@@ -73,7 +79,10 @@ class Space_Docking_Env(gym.Env):
             self.y = self.y - window_height
         elif self.y < 0:
             self.y = self.y + window_height
-            
+
+        self.player.pos_x = self.x - int(self.player.surf.get_width()/2)
+        self.player.pos_y = self.y - int(self.player.surf.get_height()/2)
+        self.player.rot_angle += self.ang
         observation, reward, done, info = 0., 0., False, {}
         return observation, reward, done, info
     
@@ -81,9 +90,10 @@ class Space_Docking_Env(gym.Env):
 
         self.window.fill((0,0,90))
         
-        self.astro.update()
-        self.window.blit(self.astro.surf, self.astro.rect)
-        self.window.blit(self.player.surf, self.player.rect)
+        self.player.update()
+        self.window.blit(self.astro.surf, (self.astro.pos_x, self.astro.pos_y))
+        self.window.blit(self.player.surf, (self.player.pos_x, self.player.pos_y))
+        print(self.player.pos_x, self.player.pos_y)
 
         pygame.draw.circle(self.window, (0, 200, 200), (int(self.x), int(self.y)), 6)
         # draw orientation
