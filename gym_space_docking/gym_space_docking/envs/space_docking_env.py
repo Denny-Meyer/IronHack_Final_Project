@@ -7,7 +7,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-import math, sys, os, copy, time, random
+#import math, sys, os, copy, time, random
 
 from gym_space_docking.envs.space_objects import *
 
@@ -26,7 +26,7 @@ class Space_Docking_Env(gym.Env):
 
     def init_render(self):
         pygame.init()
-        self.window = pygame.display.set_mode((window_width, window_height))
+        self.window = pygame.display.set_mode(size=(window_width, window_height))#,flags=pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         self.player = Ship()
         self.astro = Asteroid()
@@ -78,7 +78,8 @@ class Space_Docking_Env(gym.Env):
         return observation, reward, done, info
     
     def render(self):
-        self.window.fill((0,0,0))
+
+        self.window.fill((0,0,90))
         
         self.astro.update()
         self.window.blit(self.astro.surf, self.astro.rect)
