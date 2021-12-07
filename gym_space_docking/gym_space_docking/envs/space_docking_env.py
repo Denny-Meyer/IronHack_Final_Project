@@ -7,11 +7,11 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-#import math, sys, os, copy, time, random
+import math, sys, os, copy, time, random
 
 from gym_space_docking.envs.space_objects import *
 
-window_width, window_height = 1200, 800
+window_width, window_height = 1800, 1200
 rotation_max, acceleration_max, retro_max = 0.08, 0.05, 0.025
 SCREENFLAGS = pygame.RESIZABLE #| pygame.OPENGL
 
@@ -21,7 +21,7 @@ class Space_Docking_Env(gym.Env):
         # self.action_space = gym.spaces.Box()
         self.x = window_width/2
         self.y = window_height/2
-        self.ang = 0.
+        self.ang = 0.#0.5 * np.pi
         self.vel_x = 0.
         self.vel_y = 0.
 
@@ -80,9 +80,9 @@ class Space_Docking_Env(gym.Env):
         elif self.y < 0:
             self.y = self.y + window_height
 
-        self.player.pos_x = self.x - int(self.player.surf.get_width()/2)
-        self.player.pos_y = self.y - int(self.player.surf.get_height()/2)
-        self.player.rot_angle += self.ang
+        self.player.vel_x = self.vel_x# - (self.player.surf.get_width()/2)
+        self.player.vel_y = self.vel_y# - (self.player.surf.get_height()/2)
+        self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
         observation, reward, done, info = 0., 0., False, {}
         return observation, reward, done, info
     

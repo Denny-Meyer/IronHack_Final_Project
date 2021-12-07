@@ -1,18 +1,19 @@
 import pygame
 from pygame import transform
+from pygame import math
 from pygame.locals import *
-
+import math
 
 class SpaceObject(pygame.sprite.Sprite):
 
     def __init__(self) -> None:
         super(SpaceObject, self).__init__()
-        self.pos_x = 0.0
-        self.pos_y = 0.0
-        self.vel_x = 0.0
-        self.vel_y = 0.0
-        self.rot_angle = 0.0
-        self.rot_vel = 0.0
+        self.pos_x = 0.
+        self.pos_y = 0.
+        self.vel_x = 0.
+        self.vel_y = 0.
+        self.rot_angle = 0.
+        self.rot_vel = 0.
         self.image = None
         self.surf = None
         self.rect = None
@@ -20,20 +21,37 @@ class SpaceObject(pygame.sprite.Sprite):
     def set_offset(self):
         self.pos_x = int(self.surf.get_width()/2)
         self.pos_y = int(self.surf.get_height()/2)
-        print(self.pos_x, self.pos_y)
+        #print(self.pos_x, self.pos_y)
 
     def rot_center(self):
         rot_sprite = pygame.transform.rotate(self.image, self.rot_angle)
         self.surf = rot_sprite
-        
-        
     
-    def transform(self, direction):
+    def rotate(surface, angle, pivot, offset):
+
+        """Rotate the surface around the pivot point.
+        Args:
+            surface (pygame.Surface): The surface that is to be rotated.
+            angle (float): Rotate by this angle.
+            pivot (tuple, list, pygame.math.Vector2): The pivot point.
+            offset (pygame.math.Vector2): This vector is added to the pivot.
+        """
+        rotated_image = transform.rotozoom(surface, -angle, 1)  # Rotate the image.
+        rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
+        # Add the offset vector to the center/pivot point to shift the rect.
+        rect = rotated_image.get_rect(center=pivot+rotated_offset)
+        return rotated_image, rect  # Return the rotated image and shifted rect.
+            
+    
+    def transform(self):
+        self.pos_x = self.pos_x + self.vel_x# - (self.surf.get_width()/2)
+        self.pos_y = self.pos_y + self.vel_y# - (self.surf.get_height()/2)
         pass
     
     def update(self):
+        #self.surf,self.rect = self.rotate(self.image, self.rot_angle, self.rect)
         self.rot_center()
-        
+        self.transform()
         self.rot_angle += self.rot_vel
         pass
 
