@@ -11,7 +11,7 @@ import math, sys, os, copy, time, random
 
 from gym_space_docking.envs.space_objects import *
 
-window_width, window_height = 1800, 1200
+window_width, window_height = 1200, 640
 rotation_max, acceleration_max, retro_max = 0.08, 0.05, 0.025
 SCREENFLAGS = pygame.RESIZABLE #| pygame.OPENGL
 
@@ -92,8 +92,11 @@ class Space_Docking_Env(gym.Env):
         
         self.player.update()
         self.window.blit(self.astro.surf, (self.astro.pos_x, self.astro.pos_y))
-        self.window.blit(self.player.surf, (self.player.pos_x, self.player.pos_y))
-        print(self.player.pos_x, self.player.pos_y)
+        self.window.blit(self.player.surf, (self.player.pos_x - self.player.surf.get_rect().centerx, self.player.pos_y -self.player.surf.get_rect().centery))
+        #print(self.player.pos_x, self.player.pos_y)
+
+        print(self.player.surf.get_rect().colliderect(self.astro.surf.get_rect()))
+            #print('collision')
 
         pygame.draw.circle(self.window, (0, 200, 200), (int(self.x), int(self.y)), 6)
         # draw orientation

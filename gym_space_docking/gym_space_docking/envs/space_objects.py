@@ -26,6 +26,8 @@ class SpaceObject(pygame.sprite.Sprite):
     def rot_center(self):
         rot_sprite = pygame.transform.rotate(self.image, self.rot_angle)
         self.surf = rot_sprite
+        self.rect = self.surf.get_rect().center
+        #print(self.surf.get_rect().center)
     
     def rotate(surface, angle, pivot, offset):
 
