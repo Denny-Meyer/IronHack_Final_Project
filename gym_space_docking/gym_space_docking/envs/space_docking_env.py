@@ -9,10 +9,15 @@ from gym.utils import seeding
 import numpy as np
 import math, sys, os, copy, time, random
 
+
+
 from gym_space_docking.envs.space_objects import *
 
+local_path = os.path.curdir
+
+
 window_width, window_height = 1200, 640
-rotation_max, acceleration_max, retro_max = 0.08, 0.05, 0.025
+rotation_max, acceleration_max, retro_max = 0.1, 0.08, 0.025
 SCREENFLAGS = pygame.RESIZABLE #| pygame.OPENGL
 
 class Space_Docking_Env(gym.Env):
@@ -20,6 +25,7 @@ class Space_Docking_Env(gym.Env):
         metadata = {'render.modes': ['human']}  
         # self.observation_space = gym.spaces.Box()
         # self.action_space = gym.spaces.Box()
+        self.window = None
         self.x = window_width/2
         self.y = window_height/2
         self.ang = 0.#0.5 * np.pi
@@ -32,8 +38,12 @@ class Space_Docking_Env(gym.Env):
         self.clock = pygame.time.Clock()
         self.clock.tick(30)
         self.player = Ship()
-        self.astro = Asteroid()
-        self.astro.rot_vel = 0.001
+        self.astro = Asteroid(astrosize='L0')
+        self.astro_0 = Asteroid(astrosize='L1')
+        self.astro_0.rot_vel = -0.05
+        self.astro_0.pos_x = 700
+        self.astro_0.pos_y = 500
+        self.astro.rot_vel = 0.1
         self.astro.pos_y = 100
         self.astro.pos_x = 200
         self.player.pos_x = self.x
@@ -46,30 +56,22 @@ class Space_Docking_Env(gym.Env):
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         
         # ─── APPLY ROTATION ──────────────────────────────────────────────
-        self.ang = self.ang + rotation_max * action[1]
-        if self.ang > np.pi:
-            self.ang = self.ang - 2 * np.pi
-        if self.ang < -np.pi:
-            self.ang = self.ang + 2 * np.pi
-            
+        self.player.rot_vel += action[1] * rotation_max
+
         # ─── APPLY ACCELERATION ──────────────────────────────────────────
         acceleration = action[0]
         # backwards acceleration at quarter thrust
         if acceleration < 0:
             acceleration = acceleration * 0.5 
-        self.vel_x = self.vel_x + acceleration_max * acceleration * np.cos(self.ang)
-        self.vel_y = self.vel_y - acceleration_max * acceleration * np.sin(self.ang)
+        self.player.vel_x = self.player.vel_x + acceleration_max * acceleration * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi)
+        self.player.vel_y = self.player.vel_y - acceleration_max * acceleration * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi)
         
         # ––––––– APPLY STRAFE ACCELERATION ––––––––––––––––––––––––––––––––
         strafe = action[2]
         
-        self.vel_x = self.vel_x + retro_max * strafe * np.sin(self.ang)
-        self.vel_y = self.vel_y + retro_max * strafe * np.cos(self.ang)
+        self.player.vel_x = self.player.vel_x + retro_max * strafe * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi)
+        self.player.vel_y = self.player.vel_y + retro_max * strafe * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi)
         #print(action[2])
-
-        # move rocket
-        self.x = self.x + self.vel_x
-        self.y = self.y + self.vel_y
         
         # keep rocket on screen (optional)
         if self.x > window_width:
@@ -81,31 +83,37 @@ class Space_Docking_Env(gym.Env):
         elif self.y < 0:
             self.y = self.y + window_height
 
-        self.player.vel_x = self.vel_x# - (self.player.surf.get_width()/2)
-        self.player.vel_y = self.vel_y# - (self.player.surf.get_height()/2)
-        self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
+        self.vel_x  = self.player.vel_x #= self.vel_x# - (self.player.surf.get_width()/2)
+        self.vel_y = self.player.vel_y #= self.vel_y# - (self.player.surf.get_height()/2)
+        #self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
         observation, reward, done, info = 0., 0., False, {}
         return observation, reward, done, info
     
     def render(self, mode='human', close=False):
+        if mode == 'rgb_array':
+            pass
+        elif mode == 'human':
+            self.window.fill((0,0,90))
+            
+            self.astro.update()
+            self.astro_0.update()
+            self.player.update()
+            
+            self.window.blit(self.astro_0.surf, (self.astro_0.pos_x - self.astro_0.surf.get_rect().centerx, self.astro_0.pos_y - self.astro_0.surf.get_rect().centery))
+            self.window.blit(self.astro.surf, (self.astro.pos_x - self.astro.surf.get_rect().centerx, self.astro.pos_y - self.astro.surf.get_rect().centery))
+            self.window.blit(self.player.surf, (self.player.pos_x - self.player.surf.get_rect().centerx, self.player.pos_y -self.player.surf.get_rect().centery))
+            #print(self.player.pos_x, self.player.pos_y)
 
-        self.window.fill((0,0,90))
-        
-        self.player.update()
-        self.window.blit(self.astro.surf, (self.astro.pos_x, self.astro.pos_y))
-        self.window.blit(self.player.surf, (self.player.pos_x - self.player.surf.get_rect().centerx, self.player.pos_y -self.player.surf.get_rect().centery))
-        #print(self.player.pos_x, self.player.pos_y)
+            #print(self.player.surf.get_rect().colliderect(self.astro.surf.get_rect()))
+                #print('collision')
 
-        print(self.player.surf.get_rect().colliderect(self.astro.surf.get_rect()))
-            #print('collision')
-
-        pygame.draw.circle(self.window, (0, 200, 200), (int(self.x), int(self.y)), 6)
-        # draw orientation
-        
-        p1 = (self.x - 10 * np.cos(self.ang),self.y + 10 * np.sin(self.ang))
-        p2 = (self.x + 15 * np.cos(self.ang),self.y - 15 * np.sin(self.ang))
-        pygame.draw.line(self.window,(0,100,100),p1,p2,2)
-        pygame.display.update()
+            pygame.draw.circle(self.window, (0, 200, 200), (int(self.player.pos_x), int(self.player.pos_y)), 6)
+            # draw orientation
+            
+            p1 = (self.player.pos_x - 10 * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos_y + 10 * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi))
+            p2 = (self.player.pos_x + 15 * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos_y - 15 * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi))
+            pygame.draw.line(self.window,(0,100,100),p1,p2,2)
+            pygame.display.update()
         
 def pressed_to_action(keytouple):
     action_turn = 0.
@@ -124,14 +132,10 @@ def pressed_to_action(keytouple):
         action_strafe = -1
     if keytouple[K_e] == 1:
         action_strafe = 1
-    # ─── KEY IDS ─────────
-    # arrow forward   : 273
-    # arrow backwards : 274
-    # arrow left      : 276
-    # arrow right     : 275
+    
     return np.array([action_acc, action_turn, action_strafe])
 
-'''
+
 environment = Space_Docking_Env()
 environment.init_render()
 run = True
@@ -154,9 +158,8 @@ while run:
     # calculate one step
     environment.step(action)
     # render current state
-    environment.render()
+    environment.render(mode='human')
 pygame.quit()
 
 
 
-'''

@@ -2,8 +2,19 @@ import pygame
 from pygame import transform
 from pygame import math
 from pygame.locals import *
+import os
 import math
 
+file_path = os.path.dirname(os.path.realpath(__file__))
+
+PATH_SHIP_0 = '/assets/med_ship_01.png'
+PATH_ASTRO_L0 = '/assets/asteroid_large_0.png'
+PATH_ASTRO_L1 = '/assets/asteroid_large_1.png'
+PATH_ASTRO_M0 = '/assets/asteroid_med_2.png'
+PATH_LAND = '/assets/stationLandingSite.png'
+
+
+print(file_path)
 class SpaceObject(pygame.sprite.Sprite):
 
     def __init__(self) -> None:
@@ -24,6 +35,8 @@ class SpaceObject(pygame.sprite.Sprite):
         #print(self.pos_x, self.pos_y)
 
     def rot_center(self):
+        self.rot_angle += self.rot_vel
+        #print(self.rot_angle)
         rot_sprite = pygame.transform.rotate(self.image, self.rot_angle)
         self.surf = rot_sprite
         self.rect = self.surf.get_rect().center
@@ -54,7 +67,7 @@ class SpaceObject(pygame.sprite.Sprite):
         #self.surf,self.rect = self.rotate(self.image, self.rot_angle, self.rect)
         self.rot_center()
         self.transform()
-        self.rot_angle += self.rot_vel
+        #self.rot_angle += self.rot_vel
         pass
 
 
@@ -62,7 +75,7 @@ class Ship(SpaceObject):
 
     def __init__(self):
         super(Ship, self).__init__()
-        self.image = pygame.image.load("assets/med_ship_01.png").convert_alpha()
+        self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
         self.set_offset()
         #self.surf.set_colorkey((0, 0, 0), RLEACCEL)
@@ -70,9 +83,16 @@ class Ship(SpaceObject):
 
 
 class Asteroid(SpaceObject):
-    def __init__(self):
+    def __init__(self, astrosize='L1'):
         super(Asteroid, self).__init__()
-        self.image = pygame.image.load("assets/asteroid_large_0.png").convert_alpha()
+        im_path = ''
+        if astrosize == 'L0':
+            im_path = PATH_ASTRO_L0
+        elif astrosize == 'L1':
+            im_path = PATH_ASTRO_L1
+        else:
+            im_path = PATH_ASTRO_M0
+        self.image = pygame.image.load(file_path + im_path).convert_alpha()
         self.surf = self.image
         self.set_offset()
         #self.rect = self.surf.get_rect()
@@ -80,6 +100,11 @@ class Asteroid(SpaceObject):
 
 
 class DockingSpot(SpaceObject):
+    def __init__(self) -> None:
+        super().__init__()
+        self.image = pygame.image.load(file_path + PATH_LAND).convert_alpha()
+        self.surf = self.image
+        self.set_offset()
     pass
 
 
