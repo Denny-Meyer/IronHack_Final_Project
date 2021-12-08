@@ -102,16 +102,15 @@ class Space_Docking_Env(gym.Env):
                 obj.update()
                 #self.window.blit(obj.surf, (obj.pos_x - obj.surf.get_rect().centerx, obj.pos_y - obj.surf.get_rect().centery))
             self.player.update()
+
             player_mask = pygame.mask.from_surface(self.player.surf)
             for i in self.objects:
                 i_mask = pygame.mask.from_surface(i.surf)
-                if self.player.surf.get_rect(center = (self.player.pos_x, self.player.pos_y)).colliderect(i.surf.get_rect(center=(i.pos_x, i.pos_y))):
-                    #print(i)
-                    off_x = self.player.surf.get_rect().centerx - i.surf.get_rect().centerx
-                    off_y = self.player.surf.get_rect().centery - i.surf.get_rect().centery
-                    print(player_mask.overlap(i_mask, (off_x, off_y)))
-                else:
-                    pass#print('no collision')
+                off_x = (i.pos_x - i.surf.get_rect().centerx) - (self.player.pos_x - self.player.surf.get_rect().centerx)
+                off_y = (i.pos_y - i.surf.get_rect().centery) - (self.player.pos_y - self.player.surf.get_rect().centery)
+                col = player_mask.overlap(i_mask, (off_x, off_y))
+                if col != None:
+                    print(col, i.name)
             #print(pygame.surfarray.pixels2d(self.window)[0][0])
             #print(self.window.unmap_rgb(4278190150))
             pygame.draw.circle(self.window, (0, 200, 200), (int(self.player.pos_x), int(self.player.pos_y)), 6)
@@ -124,18 +123,18 @@ class Space_Docking_Env(gym.Env):
         
 
     def init_level(self):
-        self.player = Ship()
-        self.astro = Asteroid(astrosize='L0')
-        self.astro_0 = Asteroid(astrosize='L1')
-        self.astro_0.rot_vel = -0.05
+        self.player = Ship(name='Player')
+        self.astro = Asteroid(astrosize='L0', name='astro_0')
+        self.astro_0 = Asteroid(astrosize='L1', name='astro_1')
+        self.astro_0.rot_vel = -0.04
         self.astro_0.pos_x = 700
         self.astro_0.pos_y = 500
-        self.astro.rot_vel = 0.1
+        self.astro.rot_vel = 0.05
         self.astro.pos_y = 100
         self.astro.pos_x = 200
         self.player.pos_x = self.x
         self.player.pos_y = self.y
-        self.dock = DockingSpot()
+        self.dock = DockingSpot(name='Docking_Spot')
         self.dock.pos_x = 100
         self.dock.pos_y = 600
         self.objects = pygame.sprite.Group()
@@ -192,8 +191,8 @@ run = True
 
 while run:
     # set game speed to 30 fps
-    #environment.clock.tick(30)
-    environment.clock.tick_busy_loop(30)
+    environment.clock.tick(30)
+    #environment.clock.tick_busy_loop(30)
     # ─── CONTROLS ───────────────────────────────────────────────────────────────────
     # end while-loop when window is closed
     get_event = pygame.event.get()

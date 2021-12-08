@@ -21,8 +21,8 @@ PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
 print(file_path)
 class SpaceObject(pygame.sprite.Sprite):
 
-    def __init__(self) -> None:
-        super(SpaceObject, self).__init__()
+    def __init__(self, name='',**kwargs) -> None:
+        super(SpaceObject, self).__init__(kwargs)
         self.pos_x = 0.
         self.pos_y = 0.
         self.vel_x = 0.
@@ -31,6 +31,7 @@ class SpaceObject(pygame.sprite.Sprite):
         self.rot_vel = 0.
         self.image = None
         self.surf = None
+        self.name = name
         #self.rect = None
 
         self.root_screen = None
@@ -92,8 +93,8 @@ class SpaceObject(pygame.sprite.Sprite):
 
 class Ship(SpaceObject):
 
-    def __init__(self):
-        super(Ship, self).__init__()
+    def __init__(self, **kwargs):
+        super(Ship, self).__init__(kwargs)
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
         self.set_offset()
@@ -121,8 +122,8 @@ class Ship(SpaceObject):
 
 
 class Asteroid(SpaceObject):
-    def __init__(self, astrosize='L1'):
-        super(Asteroid, self).__init__()
+    def __init__(self, astrosize='L1', **kwargs):
+        super(Asteroid, self).__init__(kwargs)
         im_path = ''
         if astrosize == 'L0':
             im_path = PATH_ASTRO_L0
@@ -138,8 +139,8 @@ class Asteroid(SpaceObject):
 
 
 class DockingSpot(SpaceObject):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs) -> None:
+        super().__init__(kwargs)
         self.image = pygame.image.load(file_path + PATH_LAND).convert_alpha()
         self.surf = self.image
         self.set_offset()
