@@ -17,6 +17,7 @@ SCREENFLAGS = pygame.RESIZABLE #| pygame.OPENGL
 
 class Space_Docking_Env(gym.Env):
     def __init__(self,env_config={}):
+        metadata = {'render.modes': ['human']}  
         # self.observation_space = gym.spaces.Box()
         # self.action_space = gym.spaces.Box()
         self.x = window_width/2
@@ -86,7 +87,7 @@ class Space_Docking_Env(gym.Env):
         observation, reward, done, info = 0., 0., False, {}
         return observation, reward, done, info
     
-    def render(self):
+    def render(self, mode='human', close=False):
 
         self.window.fill((0,0,90))
         
@@ -130,6 +131,7 @@ def pressed_to_action(keytouple):
     # arrow right     : 275
     return np.array([action_acc, action_turn, action_strafe])
 
+'''
 environment = Space_Docking_Env()
 environment.init_render()
 run = True
@@ -157,3 +159,4 @@ pygame.quit()
 
 
 
+'''
