@@ -1,6 +1,6 @@
+from numpy import min_scalar_type
 import pygame
-from pygame import transform
-from pygame import math
+from pygame import transform, mixer
 from pygame.locals import *
 import os
 import math
@@ -12,6 +12,10 @@ PATH_ASTRO_L0 = '/assets/asteroid_large_0.png'
 PATH_ASTRO_L1 = '/assets/asteroid_large_1.png'
 PATH_ASTRO_M0 = '/assets/asteroid_med_2.png'
 PATH_LAND = '/assets/stationLandingSite.png'
+
+PATH_THRUSTER_SOUND_MAIN = '/assets/thrusters.wav'
+
+PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
 
 
 print(file_path)
@@ -27,7 +31,10 @@ class SpaceObject(pygame.sprite.Sprite):
         self.rot_vel = 0.
         self.image = None
         self.surf = None
-        self.rect = None
+        #self.rect = None
+
+        self.root_screen = None
+        self.children = []
     
     def set_offset(self):
         self.pos_x = int(self.surf.get_width()/2)
@@ -63,10 +70,22 @@ class SpaceObject(pygame.sprite.Sprite):
         self.pos_y = self.pos_y + self.vel_y# - (self.surf.get_height()/2)
         pass
     
+
     def update(self):
+        
         #self.surf,self.rect = self.rotate(self.image, self.rot_angle, self.rect)
         self.rot_center()
         self.transform()
+        for child in self.children:
+            child.rot_angle = self.rot_angle
+            child.pos_x = self.pos_x
+            child.pos_y = self.pos_y + 50
+            child.update()
+            if not child.root_screen:
+                child.root_screen = self.root_screen
+        if self.root_screen:
+            #self.root_screen.blit(child.surf, (100,100))
+            self.root_screen.blit(self.surf, (self.pos_x - self.surf.get_rect().centerx, self.pos_y - self.surf.get_rect().centery))
         #self.rot_angle += self.rot_vel
         pass
 
@@ -78,8 +97,27 @@ class Ship(SpaceObject):
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
         self.set_offset()
+        self.thruster_main = mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
+        mixer.Sound.set_volume(self.thruster_main, 0.5)
+        mixer.Sound.fadeout(self.thruster_main, 10)
         #self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         #self.rect = self.surf.get_rect()
+        self.main_thruster_active = False
+        self.main_thruster_im = SpaceObject()
+        self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
+        self.main_thruster_im.root_screen = self.root_screen
+        self.main_thruster_im.pos_x = 500
+        self.main_thruster_im.pos_y = 200
+        self.children.append(self.main_thruster_im)
+
+    def set_thruster(self, active):
+        if self.main_thruster_active != active:
+            self.main_thruster_active = active
+            if self.main_thruster_active:
+                mixer.Sound.play(self.thruster_main, -1)
+            else:
+                mixer.Sound.stop(self.thruster_main)
+    
 
 
 class Asteroid(SpaceObject):
