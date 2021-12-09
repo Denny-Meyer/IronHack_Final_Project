@@ -1,5 +1,5 @@
 import pygame
-from pygame import transform
+from pygame import transform, math
 from pygame.locals import *
 
 import gym
@@ -26,7 +26,7 @@ class Space_Docking_Env(gym.Env):
         self.observation_space = spaces.Box(low=0, high=255,
                                         shape=(window_width, window_height), dtype=np.uint8)
         #print(self.observation_space)
-        self.action_space =  spaces.Discrete(6)
+        self.action_space =  spaces.Discrete(7)
 
         print(self.action_space)
         self.window = None
@@ -45,21 +45,31 @@ class Space_Docking_Env(gym.Env):
 
     def reset(self):
         # reset the environment to initial state
-        return observation
+        return None #observation
 
     def step(self, action=np.zeros((3),dtype=np.float32)):
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         
         # ─── APPLY ROTATION ──────────────────────────────────────────────
         self.player.rot_vel += action[1] * rotation_max
+        if action[1] != 0:
+            self.player.set_retro_thruster(True)
+        if action[2] != 0:
+            self.player.set_retro_thruster(True)
 
         # ─── APPLY ACCELERATION ──────────────────────────────────────────
         acceleration = action[0]
         # backwards acceleration at quarter thrust
         if acceleration == 1:
-            self.player.set_thruster(True)
+            self.player.set_main_thruster(True)
+        elif acceleration == -1:
+            self.player.set_retro_thruster(True)
         else:
-            self.player.set_thruster(False)
+            self.player.set_main_thruster(False)
+        
+        if action[0] == 0 and action[1] == 0 and action[2] == 0:
+            self.player.set_retro_thruster(False)
+
         if acceleration < 0:
             acceleration = acceleration * 0.5 
         self.player.vel_x = self.player.vel_x + acceleration_max * acceleration * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi)
@@ -103,14 +113,7 @@ class Space_Docking_Env(gym.Env):
                 #self.window.blit(obj.surf, (obj.pos_x - obj.surf.get_rect().centerx, obj.pos_y - obj.surf.get_rect().centery))
             self.player.update()
 
-            player_mask = pygame.mask.from_surface(self.player.surf)
-            for i in self.objects:
-                i_mask = pygame.mask.from_surface(i.surf)
-                off_x = (i.pos_x - i.surf.get_rect().centerx) - (self.player.pos_x - self.player.surf.get_rect().centerx)
-                off_y = (i.pos_y - i.surf.get_rect().centery) - (self.player.pos_y - self.player.surf.get_rect().centery)
-                col = player_mask.overlap(i_mask, (off_x, off_y))
-                if col != None:
-                    print(col, i.name)
+            self.check_for_player_collision()
             #print(pygame.surfarray.pixels2d(self.window)[0][0])
             #print(self.window.unmap_rgb(4278190150))
             pygame.draw.circle(self.window, (0, 200, 200), (int(self.player.pos_x), int(self.player.pos_y)), 6)
@@ -123,6 +126,8 @@ class Space_Docking_Env(gym.Env):
         
 
     def init_level(self):
+
+        # create basic level 
         self.player = Ship(name='Player')
         self.astro = Asteroid(astrosize='L0', name='astro_0')
         self.astro_0 = Asteroid(astrosize='L1', name='astro_1')
@@ -149,6 +154,18 @@ class Space_Docking_Env(gym.Env):
 
     
     def get_observation(self):
+
+        # needed observation 
+        # ship pos, vel, rot, rot_vel
+        # target pos
+        # map 1, map 10, map 100
+        player_pos = pygame.math.Vector2(self.player.pos_x, self.player.pos_y)
+        player_vel = pygame.math.Vector2(self.player.vel_x, self.player.vel_y)
+        target_pos = pygame.math.Vector2(self.dock.pos_x, self.dock.pos_y)
+        target_vel = pygame.math.Vector2(self.dock.vel_x, self.dock.vel_y)
+
+
+
         return np.random.randint(3)
 
 
@@ -156,61 +173,27 @@ class Space_Docking_Env(gym.Env):
         pass
     
 
+# ----------- Simple Physics -----------------------------------------
+
     def check_for_player_collision(self) -> bool:
+
+        player_mask = pygame.mask.from_surface(self.player.surf)
+        for i in self.objects:
+            if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
+                #print('player rect collide with ', i.name['name'])
+                i_mask = pygame.mask.from_surface(i.surf)
+                off_x = (i.pos_x - i.surf.get_rect().centerx) - (self.player.pos_x - self.player.surf.get_rect().centerx)
+                off_y = (i.pos_y - i.surf.get_rect().centery) - (self.player.pos_y - self.player.surf.get_rect().centery)
+                col = player_mask.overlap(i_mask, (off_x, off_y))
+                if col != None:
+                        #print(col, i.name)
+                        return True
         return False
 
 
 
 
 
-def pressed_to_action(keytouple):
-    action_turn = 0.
-    action_acc = 0.
-    action_strafe = 0.
-
-    if keytouple[K_DOWN] == 1 or keytouple[K_s] == 1:
-        action_acc -= 1
-    if keytouple[K_UP] == 1 or keytouple[K_w] == 1:  # forward
-        action_acc += 1
-    if keytouple[K_LEFT] == 1 or keytouple[K_a] == 1:  # left  is -1
-        action_turn += 1
-    if keytouple[K_RIGHT] == 1 or keytouple[K_d] == 1:  # right is +1
-        action_turn -= 1
-    if keytouple[K_q] == 1:
-        action_strafe = -1
-    if keytouple[K_e] == 1:
-        action_strafe = 1
-    
-    return np.array([action_acc, action_turn, action_strafe])
-
-
-environment = Space_Docking_Env()
-environment.init_render()
-run = True
-
-
-while run:
-    # set game speed to 30 fps
-    environment.clock.tick(30)
-    #environment.clock.tick_busy_loop(30)
-    # ─── CONTROLS ───────────────────────────────────────────────────────────────────
-    # end while-loop when window is closed
-    get_event = pygame.event.get()
-    
-    # get pressed keys, generate action
-    get_pressed = pygame.key.get_pressed()
-            
-    action = pressed_to_action(get_pressed)
-    # calculate one step
-    environment.step(action)
-    # render current state
-    environment.render(mode='human')
-
-    for event in get_event:
-        if event.type == pygame.QUIT:
-            pygame.display.quit()
-            run = False
-pygame.quit()
 
 
 

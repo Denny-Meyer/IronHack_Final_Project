@@ -1,9 +1,10 @@
-from numpy import min_scalar_type
+from numpy import mat, min_scalar_type
 import pygame
-from pygame import transform, mixer
+from pygame import Vector2, transform, mixer, math
 from pygame.locals import *
 import os
 import math
+import wave
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,6 +15,7 @@ PATH_ASTRO_M0 = '/assets/asteroid_med_2.png'
 PATH_LAND = '/assets/stationLandingSite.png'
 
 PATH_THRUSTER_SOUND_MAIN = '/assets/thrusters.wav'
+PATH_THRUSTER_SOUND_RETRO = '/assets/retro.wav'
 
 PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
 
@@ -23,6 +25,8 @@ class SpaceObject(pygame.sprite.Sprite):
 
     def __init__(self, name='',**kwargs) -> None:
         super(SpaceObject, self).__init__(kwargs)
+        self.pos = Vector2(x= 0., y= 0.)
+        self.vel = Vector2(x= 0., y= 0.)
         self.pos_x = 0.
         self.pos_y = 0.
         self.vel_x = 0.
@@ -38,6 +42,7 @@ class SpaceObject(pygame.sprite.Sprite):
         self.children = []
     
     def set_offset(self):
+        self.pos = Vector2(self.surf.get_rect().center)
         self.pos_x = int(self.surf.get_width()/2)
         self.pos_y = int(self.surf.get_height()/2)
         #print(self.pos_x, self.pos_y)
@@ -99,11 +104,13 @@ class Ship(SpaceObject):
         self.surf = self.image
         self.set_offset()
         self.thruster_main = mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
+        self.thruster_retro = mixer.Sound(file_path + PATH_THRUSTER_SOUND_RETRO)
         mixer.Sound.set_volume(self.thruster_main, 0.5)
+        mixer.Sound.set_volume(self.thruster_retro, 0.3)
         mixer.Sound.fadeout(self.thruster_main, 10)
-        #self.surf.set_colorkey((0, 0, 0), RLEACCEL)
-        #self.rect = self.surf.get_rect()
+
         self.main_thruster_active = False
+        self.retro_thruster_active = False
         self.main_thruster_im = SpaceObject()
         self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
         self.main_thruster_im.root_screen = self.root_screen
@@ -111,7 +118,7 @@ class Ship(SpaceObject):
         self.main_thruster_im.pos_y = 200
         self.children.append(self.main_thruster_im)
 
-    def set_thruster(self, active):
+    def set_main_thruster(self, active):
         if self.main_thruster_active != active:
             self.main_thruster_active = active
             if self.main_thruster_active:
@@ -119,6 +126,13 @@ class Ship(SpaceObject):
             else:
                 mixer.Sound.stop(self.thruster_main)
     
+    def set_retro_thruster(self, active):
+        if self.retro_thruster_active != active:
+            self.retro_thruster_active = active
+            if self.retro_thruster_active:
+                mixer.Sound.play(self.thruster_retro, -1)
+            else:
+                mixer.Sound.stop(self.thruster_retro)
 
 
 class Asteroid(SpaceObject):
