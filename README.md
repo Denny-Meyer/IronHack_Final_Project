@@ -1,8 +1,9 @@
-# IronHack_Final_Project
+# IronHack Final Project
 
 
 
-Description:
+
+### Description:
 
 
 Worksteps:
@@ -10,6 +11,7 @@ Worksteps:
 - creating DQN network
 - train
 - validate
+- documention [smartsheet](https://www.smartsheet.com/)
 
 Goal:
 
@@ -24,8 +26,8 @@ Used libs:
 
 
 Used data:
-- self made Sprites **All Rights Reserved**
-- Sounds [OpenGameArt](https://opengameart.org/)
+- self made sprites **All Rights Reserved**
+- sound [OpenGameArt](https://opengameart.org/)
 
 Learning material:
 - [lectures](https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/)
@@ -38,3 +40,7 @@ Learning material:
 
 
 <image src="Status.png"/>
+
+
+### usage:
+
