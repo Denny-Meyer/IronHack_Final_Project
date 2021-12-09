@@ -1,9 +1,9 @@
 import numpy as np
 import pygame
-from pygame import Vector2, transform, mixer, math
+from pygame import transform, mixer, math
 from pygame.locals import *
 import os
-import math
+import math as m
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -36,12 +36,11 @@ class SpaceObject(pygame.sprite.Sprite):
 
     def __init__(self, name='',**kwargs) -> None:
         super(SpaceObject, self).__init__(kwargs)
-        self.pos = Vector2(x= 0., y= 0.)
-        self.vel = Vector2(x= 0., y= 0.)
-        self.pos_x = 0.
-        self.pos_y = 0.
-        self.vel_x = 0.
-        self.vel_y = 0.
+        self.pos = math.Vector2(0,0)
+        self.vel = math.Vector2(0,0)
+        self.offset = math.Vector2(0,0)
+        self.pivot = math.Vector2(0,0)
+        
         self.rot_angle = 0.
         self.rot_vel = 0.
         self.image = None
@@ -53,21 +52,14 @@ class SpaceObject(pygame.sprite.Sprite):
         self.children = []
     
     def set_offset(self):
-        self.pos = Vector2(self.surf.get_rect().center)
-        self.pos_x = int(self.surf.get_width()/2)
-        self.pos_y = int(self.surf.get_height()/2)
+        self.pos = self.pos + math.Vector2(self.surf.get_rect().center)
+        #self.pos_x = int(self.surf.get_width()/2)
+        #self.pos_y = int(self.surf.get_height()/2)
         #print(self.pos_x, self.pos_y)
 
-    def rot_center(self):
-        self.rot_angle += self.rot_vel
-        #print(self.rot_angle)
-        rot_sprite = pygame.transform.rotate(self.image, self.rot_angle)
-        self.surf = rot_sprite
-        self.rect = self.surf.get_rect().center
-        self.pos = Vector2(self.surf.get_rect().center)
-        #print(self.surf.get_rect().center)
+        
     
-    def rotate(surface, angle, pivot, offset):
+    def rotate(self, angle=0, pivot=math.Vector2(0,0), offset=math.Vector2(0,0), scale=1):
 
         """Rotate the surface around the pivot point.
         Args:
@@ -76,35 +68,33 @@ class SpaceObject(pygame.sprite.Sprite):
             pivot (tuple, list, pygame.math.Vector2): The pivot point.
             offset (pygame.math.Vector2): This vector is added to the pivot.
         """
-        rotated_image = transform.rotozoom(surface, -angle, 1)  # Rotate the image.
+        rotated_image = transform.rotozoom(self.image, angle, scale)  # Rotate the image.
         rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
         # Add the offset vector to the center/pivot point to shift the rect.
-        rect = rotated_image.get_rect(center=pivot+rotated_offset)
+        rect = math.Vector2(rotated_image.get_rect(center=pivot+rotated_offset).center)
         return rotated_image, rect  # Return the rotated image and shifted rect.
             
     
-    def transform(self):
-        self.pos_x = self.pos_x + self.vel_x# - (self.surf.get_width()/2)
-        self.pos_y = self.pos_y + self.vel_y# - (self.surf.get_height()/2)
-        self.pos = self.pos + self.vel
-        pass
+   
     
 
     def update(self):
-        
-        #self.surf,self.rect = self.rotate(self.image, self.rot_angle, self.rect)
-        self.rot_center()
-        self.transform()
+        self.rot_angle += self.rot_vel
+        self.pos = self.pos + self.vel
+
+        print(self.rot_angle)
+        self.surf, rect_center = self.rotate(angle=self.rot_angle, offset=self.offset, pivot=self.pivot)
+        self.pos = self.pos + math.Vector2(rect_center)
         for child in self.children:
             child.rot_angle = self.rot_angle
-            child.pos_x = self.pos_x
-            child.pos_y = self.pos_y + 50
             child.update()
             if not child.root_screen:
                 child.root_screen = self.root_screen
         if self.root_screen:
             #self.root_screen.blit(child.surf, (100,100))
-            self.root_screen.blit(self.surf, (self.pos_x - self.surf.get_rect().centerx, self.pos_y - self.surf.get_rect().centery))
+            self.root_screen.blit(self.surf, self.pos)
+        
+        self.pos = math.Vector2(self.surf.get_rect().center)
         #self.rot_angle += self.rot_vel
         pass
 
@@ -128,8 +118,8 @@ class Ship(SpaceObject):
         self.main_thruster_im = SpaceObject()
         self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
         self.main_thruster_im.root_screen = self.root_screen
-        self.main_thruster_im.pos_x = 500
-        self.main_thruster_im.pos_y = 200
+
+        self.main_thruster_im.pos = math.Vector2(500, 200)
         self.children.append(self.main_thruster_im)
 
     def set_main_thruster(self, active):
@@ -198,18 +188,15 @@ class Ship(SpaceObject):
         # backwards acceleration at quarter thrust
         if acceleration < 0:
             acceleration = acceleration * 0.5 
-        self.vel_x = self.vel_x + acceleration_max * acceleration * np.cos(math.radians(self.rot_angle) + 0.5 * np.pi)
-        self.vel_y = self.vel_y - acceleration_max * acceleration * np.sin(math.radians(self.rot_angle) + 0.5 * np.pi)
+        self.vel.x = self.vel.x + acceleration_max * acceleration * np.cos(m.radians(self.rot_angle) + 0.5 * np.pi)
+        self.vel.y = self.vel.y - acceleration_max * acceleration * np.sin(m.radians(self.rot_angle) + 0.5 * np.pi)
         
 
         # ––––––– APPLY STRAFE ACCELERATION ––––––––––––––––––––––––––––––––
-        self.vel_x = self.vel_x + retro_max * strafe * np.sin(math.radians(self.rot_angle) + 0.5 * np.pi)
-        self.vel_y = self.vel_y + retro_max * strafe * np.cos(math.radians(self.rot_angle) + 0.5 * np.pi)
-        #print(action[2])
+        self.vel.x = self.vel.x + retro_max * strafe * np.sin(m.radians(self.rot_angle) + 0.5 * np.pi)
+        self.vel.y = self.vel.y + retro_max * strafe * np.cos(m.radians(self.rot_angle) + 0.5 * np.pi)
+        
 
-        self.vel_x  = self.vel_x #= self.vel_x# - (self.player.surf.get_width()/2)
-        self.vel_y = self.vel_y #= self.vel_y# - (self.player.surf.get_height()/2)
-        #self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
 
 
 class Asteroid(SpaceObject):

@@ -8,7 +8,8 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-import math, sys, os, copy, time, random
+import math as m
+import sys, os, copy, time, random
 
 
 
@@ -29,16 +30,11 @@ class Space_Docking_Env(gym.Env):
         metadata = {'render.modes': ['human', 'rgb_array']}  
         self.observation_space = spaces.Box(low=0, high=255,
                                         shape=(4*40, 4*40), dtype=np.uint8)
-        #print(self.observation_space)
+        
         self.action_space =  spaces.Discrete(7)
 
-        print(self.action_space)
         self.window = None
-        self.x = window_width/2
-        self.y = window_height/2
-        self.ang = 0.#0.5 * np.pi
-        self.vel_x = 0.
-        self.vel_y = 0.
+        
         #self.init_render()
         self.init_level()
 
@@ -54,7 +50,7 @@ class Space_Docking_Env(gym.Env):
         self.init_level()
         return None #observation
 
-    def step(self, action=np.zeros((3),dtype=np.float32)):
+    def step(self, action):
 
         #print('action',action)
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
@@ -66,6 +62,7 @@ class Space_Docking_Env(gym.Env):
 
         return observation, reward, done, info
     
+
     def render(self, mode='human', close=False):
         if mode == 'rgb_array':
             pass
@@ -75,10 +72,11 @@ class Space_Docking_Env(gym.Env):
             for obj in self.objects:
                 obj.update()
                 #self.window.blit(obj.surf, (obj.pos_x - obj.surf.get_rect().centerx, obj.pos_y - obj.surf.get_rect().centery))
+            
             self.player.update()
 
             self.check_for_player_collision()
-            
+            self.get_observation()
             self.draw_gui()
             
             pygame.display.update()
@@ -92,10 +90,6 @@ class Space_Docking_Env(gym.Env):
         # ship pos, vel, rot, rot_vel
         # target pos
         # map 1, map 10, map 100
-        player_pos = pygame.math.Vector2(self.player.pos_x, self.player.pos_y)
-        player_vel = pygame.math.Vector2(self.player.vel_x, self.player.vel_y)
-        target_pos = pygame.math.Vector2(self.dock.pos_x, self.dock.pos_y)
-        target_vel = pygame.math.Vector2(self.dock.vel_x, self.dock.vel_y)
         
 
         map_10 = np.ndarray(shape=(40,40), dtype=np.uint8)
@@ -103,10 +97,16 @@ class Space_Docking_Env(gym.Env):
         map_1k = np.ndarray(shape=(40,40), dtype=np.uint8)
         map_10k = np.ndarray(shape=(40,40), dtype=np.uint8)
 
-        for items in self.objects:
-            pass
-            
+        # calculate distance player to objects
 
+
+
+        for item in self.objects:
+            #print(self.player.pos)
+            distance = self.player.pos.distance_to(item.pos)
+            distance_vec = item.pos - self.player.pos 
+            
+            #print(distance, distance_vec, item.name['name'])
 
         return np.random.randint(3)
 
@@ -120,9 +120,9 @@ class Space_Docking_Env(gym.Env):
 
     def draw_gui(self):
         # draw orientation
-        pygame.draw.circle(self.window, (0, 200, 200), (int(self.player.pos_x), int(self.player.pos_y)), 6)
-        p1 = (self.player.pos_x - 10 * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos_y + 10 * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi))
-        p2 = (self.player.pos_x + 15 * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos_y - 15 * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi))
+        pygame.draw.circle(self.window, (0, 200, 200), (self.player.pos), 6)
+        p1 = (self.player.pos.x - 10 * np.cos(m.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos.y + 10 * np.sin(m.radians(self.player.rot_angle) + 0.5 * np.pi))
+        p2 = (self.player.pos.x + 15 * np.cos(m.radians(self.player.rot_angle) + 0.5 * np.pi),self.player.pos.y - 15 * np.sin(m.radians(self.player.rot_angle) + 0.5 * np.pi))
         pygame.draw.line(self.window,(0,100,100),p1,p2,2)
         pass
 
@@ -142,9 +142,10 @@ class Space_Docking_Env(gym.Env):
             if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
                 #print('player rect collide with ', i.name['name'])
                 i_mask = pygame.mask.from_surface(i.surf)
-                off_x = (i.pos_x - i.surf.get_rect().centerx) - (self.player.pos_x - self.player.surf.get_rect().centerx)
-                off_y = (i.pos_y - i.surf.get_rect().centery) - (self.player.pos_y - self.player.surf.get_rect().centery)
-                col = player_mask.overlap(i_mask, (off_x, off_y))
+                
+                off = (i.pos - math.Vector2(i.surf.get_rect().center)) - (self.player.pos - math.Vector2(self.player.surf.get_rect().center))
+                
+                col = player_mask.overlap(i_mask, off)
                 if col != None:
                         #print(col, i.name)
                         return True
@@ -160,16 +161,12 @@ class Space_Docking_Env(gym.Env):
             self.astro = Asteroid(astrosize='L0', name='astro_0')
             self.astro_0 = Asteroid(astrosize='L1', name='astro_1')
             self.astro_0.rot_vel = -0.04
-            self.astro_0.pos_x = 700
-            self.astro_0.pos_y = 500
+            self.astro_0.pos = math.Vector2(700, 500)
             self.astro.rot_vel = 0.05
-            self.astro.pos_y = 100
-            self.astro.pos_x = 200
-            self.player.pos_x = 500
-            self.player.pos_y = 500
+            self.astro.pos = math.Vector2(200, 100)
+            self.player.pos = math.Vector2(400, 400)
             self.dock = DockingSpot(name='Docking_Spot')
-            self.dock.pos_x = 100
-            self.dock.pos_y = 600
+            self.dock.pos = math.Vector2(100, 600)
             self.objects = pygame.sprite.Group()
             self.objects.add(self.astro)
             self.objects.add(self.astro_0)
