@@ -18,14 +18,17 @@ local_path = os.path.curdir
 
 
 window_width, window_height = 800, 420#1200, 640
-rotation_max, acceleration_max, retro_max = 0.1, 0.08, 0.025
+
 SCREENFLAGS = pygame.RESIZABLE | pygame.SCALED
 
 class Space_Docking_Env(gym.Env):
     def __init__(self,env_config={}):
+
+        pygame.init()
+        self.init_render()
         metadata = {'render.modes': ['human', 'rgb_array']}  
         self.observation_space = spaces.Box(low=0, high=255,
-                                        shape=(window_width, window_height), dtype=np.uint8)
+                                        shape=(4*40, 4*40), dtype=np.uint8)
         #print(self.observation_space)
         self.action_space =  spaces.Discrete(7)
 
@@ -36,9 +39,11 @@ class Space_Docking_Env(gym.Env):
         self.ang = 0.#0.5 * np.pi
         self.vel_x = 0.
         self.vel_y = 0.
+        #self.init_render()
+        self.init_level()
 
     def init_render(self):
-        pygame.init()
+        
         self.window = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS)#, vsync=True)
         self.clock = pygame.time.Clock()
         self.init_level()
@@ -46,15 +51,18 @@ class Space_Docking_Env(gym.Env):
 
     def reset(self):
         # reset the environment to initial state
+        self.init_level()
         return None #observation
 
     def step(self, action=np.zeros((3),dtype=np.float32)):
+
+        #print('action',action)
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         self.handle_input(action)
 
-        reward, done, info = 0., False, {}
+        observation, reward, done, info =0., 0., False, {}
 
-        observation = self.get_observation()
+        #observation = self.get_observation()
 
         return observation, reward, done, info
     
@@ -121,54 +129,9 @@ class Space_Docking_Env(gym.Env):
 # ----------- Handle Input -------------------------------------------
 
 
-    def handle_input(self, action=np.zeros((3), dtype=np.float32)):
-        # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
-        
-        # ─── APPLY ROTATION ──────────────────────────────────────────────
-        self.player.rot_vel += action[1] * rotation_max
-        if action[1] != 0:
-            self.player.set_retro_thruster(True)
-        if action[2] != 0:
-            self.player.set_retro_thruster(True)
+    def handle_input(self, action):
+        self.player.handle_input(action)
 
-        # ─── APPLY ACCELERATION ──────────────────────────────────────────
-        acceleration = action[0]
-        # backwards acceleration at quarter thrust
-        if acceleration == 1:
-            self.player.set_main_thruster(True)
-        elif acceleration == -1:
-            self.player.set_retro_thruster(True)
-        else:
-            self.player.set_main_thruster(False)
-        
-        if action[0] == 0 and action[1] == 0 and action[2] == 0:
-            self.player.set_retro_thruster(False)
-
-        if acceleration < 0:
-            acceleration = acceleration * 0.5 
-        self.player.vel_x = self.player.vel_x + acceleration_max * acceleration * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi)
-        self.player.vel_y = self.player.vel_y - acceleration_max * acceleration * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi)
-        
-        # ––––––– APPLY STRAFE ACCELERATION ––––––––––––––––––––––––––––––––
-        strafe = action[2]
-        
-        self.player.vel_x = self.player.vel_x + retro_max * strafe * np.sin(math.radians(self.player.rot_angle) + 0.5 * np.pi)
-        self.player.vel_y = self.player.vel_y + retro_max * strafe * np.cos(math.radians(self.player.rot_angle) + 0.5 * np.pi)
-        #print(action[2])
-        
-        # keep rocket on screen (optional)
-        if self.x > window_width:
-            self.x = self.x - window_width
-        elif self.x < 0:
-            self.x = self.x + window_width
-        if self.y > window_height:
-            self.y = self.y - window_height
-        elif self.y < 0:
-            self.y = self.y + window_height
-
-        self.vel_x  = self.player.vel_x #= self.vel_x# - (self.player.surf.get_width()/2)
-        self.vel_y = self.player.vel_y #= self.vel_y# - (self.player.surf.get_height()/2)
-        #self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
 
 # ----------- Simple Physics -----------------------------------------
 
@@ -202,8 +165,8 @@ class Space_Docking_Env(gym.Env):
             self.astro.rot_vel = 0.05
             self.astro.pos_y = 100
             self.astro.pos_x = 200
-            self.player.pos_x = self.x
-            self.player.pos_y = self.y
+            self.player.pos_x = 500
+            self.player.pos_y = 500
             self.dock = DockingSpot(name='Docking_Spot')
             self.dock.pos_x = 100
             self.dock.pos_y = 600
@@ -211,7 +174,7 @@ class Space_Docking_Env(gym.Env):
             self.objects.add(self.astro)
             self.objects.add(self.astro_0)
             self.objects.add(self.dock)
-            #self.objects.add(self.player)
+            
             for i in self.objects:
                 i.root_screen = self.window
             self.player.root_screen = self.window

@@ -1,10 +1,9 @@
-from numpy import mat, min_scalar_type
+import numpy as np
 import pygame
 from pygame import Vector2, transform, mixer, math
 from pygame.locals import *
 import os
 import math
-import wave
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -19,6 +18,18 @@ PATH_THRUSTER_SOUND_RETRO = '/assets/retro.wav'
 
 PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
 
+
+# ------------------ DISCRETE INPUT VALUES -----------------------
+ACTION_NONE = 0
+ACTION_MAIN = 1
+ACTION_RETRO = 2
+ACTION_TURN_RIGHT = 3
+ACTION_TURN_LEFT = 4
+ACTION_STRAFE_RIGHT = 5
+ACTION_STRAFE_LEFT = 6
+
+
+rotation_max, acceleration_max, retro_max = 0.1, 0.08, 0.025
 
 print(file_path)
 class SpaceObject(pygame.sprite.Sprite):
@@ -102,6 +113,7 @@ class Ship(SpaceObject):
 
     def __init__(self, **kwargs):
         super(Ship, self).__init__(kwargs)
+        
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
         self.set_offset()
@@ -135,6 +147,69 @@ class Ship(SpaceObject):
                 mixer.Sound.play(self.thruster_retro, -1)
             else:
                 mixer.Sound.stop(self.thruster_retro)
+    
+    def handle_input(self, action):
+
+        if action == ACTION_NONE:
+            self.set_retro_thruster(False)
+            self.set_main_thruster(False)
+            acceleration = 0
+            strafe = 0
+            rotation = 0
+        
+        if action == ACTION_MAIN:
+            self.set_main_thruster(True)
+            acceleration = 1  
+        
+        elif action == ACTION_RETRO:
+            self.set_main_thruster(False)
+            self.set_retro_thruster(True)
+            acceleration = -1
+        
+        elif action != ACTION_RETRO and action != ACTION_MAIN:
+            self.set_retro_thruster(True)
+            acceleration = 0
+        
+        if action != ACTION_NONE and action != ACTION_MAIN:
+            self.set_retro_thruster(True)
+        
+        if action == ACTION_RETRO:
+            acceleration = -1
+        
+        if action == ACTION_TURN_LEFT:
+            rotation = 1
+        elif action == ACTION_TURN_RIGHT:
+            rotation = -1
+        else:
+            rotation = 0
+        
+        if action == ACTION_STRAFE_LEFT:
+            strafe = -1
+        elif action == ACTION_STRAFE_RIGHT:
+            strafe = 1
+        else:
+            strafe = 0
+        # ─── APPLY ROTATION ──────────────────────────────────────────────
+        
+        self.rot_vel += rotation * rotation_max
+        
+        # ─── APPLY ACCELERATION ──────────────────────────────────────────
+        
+        # backwards acceleration at quarter thrust
+        if acceleration < 0:
+            acceleration = acceleration * 0.5 
+        self.vel_x = self.vel_x + acceleration_max * acceleration * np.cos(math.radians(self.rot_angle) + 0.5 * np.pi)
+        self.vel_y = self.vel_y - acceleration_max * acceleration * np.sin(math.radians(self.rot_angle) + 0.5 * np.pi)
+        
+
+        # ––––––– APPLY STRAFE ACCELERATION ––––––––––––––––––––––––––––––––
+        self.vel_x = self.vel_x + retro_max * strafe * np.sin(math.radians(self.rot_angle) + 0.5 * np.pi)
+        self.vel_y = self.vel_y + retro_max * strafe * np.cos(math.radians(self.rot_angle) + 0.5 * np.pi)
+        #print(action[2])
+
+        self.vel_x  = self.vel_x #= self.vel_x# - (self.player.surf.get_width()/2)
+        self.vel_y = self.vel_y #= self.vel_y# - (self.player.surf.get_height()/2)
+        #self.player.rot_angle = math.degrees(self.ang - 0.5 * np.pi)
 
 
 class Asteroid(SpaceObject):

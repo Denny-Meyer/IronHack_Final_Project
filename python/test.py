@@ -1,5 +1,6 @@
 import gym
 import gym_space_docking
+from gym_space_docking.envs.space_objects import ACTION_MAIN, ACTION_NONE, ACTION_RETRO, ACTION_STRAFE_LEFT, ACTION_STRAFE_RIGHT, ACTION_TURN_LEFT, ACTION_TURN_RIGHT
 
 import numpy as np
 
@@ -12,24 +13,23 @@ env = gym.make('space_docking-v0')
 
 
 def pressed_to_action(keytouple):
-    action_turn = 0.
-    action_acc = 0.
-    action_strafe = 0.
+    
+    action = ACTION_NONE
 
     if keytouple[K_DOWN] == 1 or keytouple[K_s] == 1:
-        action_acc -= 1
+        action = ACTION_RETRO
     if keytouple[K_UP] == 1 or keytouple[K_w] == 1:  # forward
-        action_acc += 1
+        action = ACTION_MAIN
     if keytouple[K_LEFT] == 1 or keytouple[K_a] == 1:  # left  is -1
-        action_turn += 1
+        action = ACTION_TURN_LEFT
     if keytouple[K_RIGHT] == 1 or keytouple[K_d] == 1:  # right is +1
-        action_turn -= 1
+        action = ACTION_TURN_RIGHT
     if keytouple[K_q] == 1:
-        action_strafe = -1
+        action = ACTION_STRAFE_LEFT
     if keytouple[K_e] == 1:
-        action_strafe = 1
+        action = ACTION_STRAFE_RIGHT
     
-    return np.array([action_acc, action_turn, action_strafe])
+    return action
 
 
 environment = env
