@@ -75,6 +75,7 @@ class SpaceObject(pygame.sprite.Sprite):
     def transform(self):
         self.pos_x = self.pos_x + self.vel_x# - (self.surf.get_width()/2)
         self.pos_y = self.pos_y + self.vel_y# - (self.surf.get_height()/2)
+        self.pos = self.pos + self.vel
         pass
     
 
