@@ -5,6 +5,11 @@
 
 ### Description:
 
+This project is chosen to handle a full circle for creating and training Deep-Q-Network.
+An OpenAI Enviroment will be used to provide a simulation area. 
+
+
+
 
 Worksteps:
 - creating Enviroment 
@@ -15,14 +20,16 @@ Worksteps:
 
 Goal:
 
-- simulated Spaceship perfom docking maneuver 
+- simulated Spaceship perfom docking maneuver without colliding on obstacles
+
+    - possible improvments are trying to dock on a rotating station 
 
 
 Used libs:
-
-- [tensorflow](https://www.tensorflow.org/) 
-- [pygame](https://www.pygame.org/news)
-- [numpy](https://numpy.org/)
+- [Gym OpenAI](https://gym.openai.com/)
+- [Tensorflow](https://www.tensorflow.org/) 
+- [Pygame](https://www.pygame.org/news)
+- [Numpy](https://numpy.org/)
 
 
 Used data:
