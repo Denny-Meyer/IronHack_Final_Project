@@ -59,4 +59,10 @@ while run:
         if event.type == pygame.QUIT:
             pygame.display.quit()
             run = False
+        if event.type == pygame.VIDEORESIZE:
+            # There's some code to add back window content here.
+            pass
+            #environment.window = pygame.display.set_mode((event.w, event.h),
+            #                                  pygame.RESIZABLE)
+            
 pygame.quit()
