@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import shape
 import pygame
 from pygame import transform, math
 from pygame.locals import *
@@ -87,7 +88,16 @@ class Space_Docking_Env(gym.Env):
         player_vel = pygame.math.Vector2(self.player.vel_x, self.player.vel_y)
         target_pos = pygame.math.Vector2(self.dock.pos_x, self.dock.pos_y)
         target_vel = pygame.math.Vector2(self.dock.vel_x, self.dock.vel_y)
+        
 
+        map_10 = np.ndarray(shape=(40,40), dtype=np.uint8)
+        map_100 = np.ndarray(shape=(40,40), dtype=np.uint8)
+        map_1k = np.ndarray(shape=(40,40), dtype=np.uint8)
+        map_10k = np.ndarray(shape=(40,40), dtype=np.uint8)
+
+        for items in self.objects:
+            pass
+            
 
 
         return np.random.randint(3)
