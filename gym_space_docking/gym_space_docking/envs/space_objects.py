@@ -48,20 +48,13 @@ class SpaceObject(pygame.sprite.Sprite):
         self.surf = None
         self.name = name
         self.rect = None
+        self.scale = 1.0
 
         self.root_screen = None
         self.children = []
-    
-    def set_offset(self):
-        #self.pos = self.pos + math.Vector2(self.surf.get_rect().center)
-        #self.pos_x = int(self.surf.get_width()/2)
-        #self.pos_y = int(self.surf.get_height()/2)
-        #print(self.pos_x, self.pos_y)
-        pass
-
         
     
-    def rotate(self, angle=0, pivot=math.Vector2(0,0), offset=math.Vector2(0,0), scale=1):
+    def rotate(self, image, angle=0, pivot=math.Vector2(0,0), offset=math.Vector2(0,0), scale=1.0):
 
         """Rotate the surface around the pivot point.
         Args:
@@ -70,8 +63,8 @@ class SpaceObject(pygame.sprite.Sprite):
             pivot (tuple, list, pygame.math.Vector2): The pivot point.
             offset (pygame.math.Vector2): This vector is added to the pivot.
         """
-        rotated_image = transform.rotozoom(self.image, angle, scale)  # Rotate the image.
-        rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
+        rotated_image = transform.rotozoom(image, angle, scale)  # Rotate the image.
+        rotated_offset = offset.rotate(-angle)  # Rotate the offset vector.
         # Add the offset vector to the center/pivot point to shift the rect.
         rect = rotated_image.get_rect(center=pivot+rotated_offset)
         return rotated_image, rect  # Return the rotated image and shifted rect.
@@ -86,14 +79,20 @@ class SpaceObject(pygame.sprite.Sprite):
         # apply movement to position
         self.pos = self.pos + self.vel
 
-        self.surf, self.rect = self.rotate(angle=self.rot_angle, offset=self.offset, pivot=self.pos)
+        # calculate rotation and transformation
+        self.surf, self.rect = self.rotate(image=self.image, angle=self.rot_angle, offset=self.offset, pivot=self.pos, scale=self.scale)
         self.pivot = self.pos
+
+        # iterate over all children
         for child in self.children:
             child.rot_angle = self.rot_angle
             child.pos = self.pos
             child.update()
+            
             if not child.root_screen:
                 child.root_screen = self.root_screen
+        
+        # draw on root canvas
         if self.root_screen:
             self.root_screen.blit(self.surf, self.rect)
         pass
@@ -106,7 +105,6 @@ class Ship(SpaceObject):
         
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
-        self.set_offset()
         self.thruster_main = mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
         self.thruster_retro = mixer.Sound(file_path + PATH_THRUSTER_SOUND_RETRO)
         mixer.Sound.set_volume(self.thruster_main, 0.5)
@@ -115,12 +113,12 @@ class Ship(SpaceObject):
 
         self.main_thruster_active = False
         self.retro_thruster_active = False
+        # ------------------- create thruster
         self.main_thruster_im = SpaceObject()
         self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
         self.main_thruster_im.root_screen = self.root_screen
-
         self.main_thruster_im.pos = self.pos
-        self.main_thruster_im.offset = math.Vector2(0, 50)
+        self.main_thruster_im.offset = math.Vector2(0, 56)
         self.children.append(self.main_thruster_im)
 
     def set_main_thruster(self, active):
@@ -213,15 +211,14 @@ class Asteroid(SpaceObject):
             im_path = PATH_ASTRO_M0
         self.image = pygame.image.load(file_path + im_path).convert_alpha()
         self.surf = self.image
-        self.set_offset()
         #self.rect = self.surf.get_rect()
     
 
 
 class DockingSpot(SpaceObject):
+    
     def __init__(self, **kwargs) -> None:
         super().__init__(kwargs)
         self.image = pygame.image.load(file_path + PATH_LAND).convert_alpha()
         self.surf = self.image
-        self.set_offset()
-    pass
+        pass
