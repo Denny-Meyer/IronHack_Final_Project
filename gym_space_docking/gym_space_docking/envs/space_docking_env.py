@@ -25,6 +25,9 @@ SCREENFLAGS = pygame.RESIZABLE | pygame.SCALED
 class Space_Docking_Env(gym.Env):
     def __init__(self,env_config={}):
 
+        self.camera_pos = math.Vector2(0,0)
+        self.camera_scale = 0.5
+
         pygame.init()
         self.init_render()
         metadata = {'render.modes': ['human', 'rgb_array']}  
@@ -34,6 +37,7 @@ class Space_Docking_Env(gym.Env):
         self.action_space =  spaces.Discrete(7)
 
         self.window = None
+        
         
         #self.init_render()
         self.init_level()
@@ -67,12 +71,20 @@ class Space_Docking_Env(gym.Env):
         if mode == 'rgb_array':
             pass
         elif mode == 'human':
-            self.window.fill((0,0,70))
+            self.window.fill((5,52,103))
             
+            self.camera_pos = self.player.pos - math.Vector2(window_width/2,window_height/2)
+
             for obj in self.objects:
+                obj.scale = self.camera_scale
+                obj.camera_pos = self.camera_pos #+ math.Vector2(window_width/2,window_height/2)
                 obj.update()
+                
+
                 #self.window.blit(obj.surf, (obj.pos_x - obj.surf.get_rect().centerx, obj.pos_y - obj.surf.get_rect().centery))
             
+            self.player.scale = self.camera_scale
+            self.player.camera_pos = self.camera_pos
             self.player.update()
 
             self.check_for_player_collision()
@@ -164,15 +176,20 @@ class Space_Docking_Env(gym.Env):
             self.astro_0.pos = math.Vector2(700, 500)
             self.astro.rot_vel = 0.05
             self.astro.pos = math.Vector2(200, 100)
-            self.player.pos = math.Vector2(400, 400)
+            self.player.pos = math.Vector2(200, 200)
             self.dock = DockingSpot(name='Docking_Spot')
             self.dock.pos = math.Vector2(100, 600)
             self.objects = pygame.sprite.Group()
             self.objects.add(self.astro)
             self.objects.add(self.astro_0)
             self.objects.add(self.dock)
+
+            self.station = SpaceStation(name='Station')
+            self.objects.add(self.station)
             
             for i in self.objects:
+                i.camera_pos = self.camera_pos
+                i.scale = self.camera_scale
                 i.root_screen = self.window
             self.player.root_screen = self.window
             pass
