@@ -70,7 +70,7 @@ class SpaceObject(pygame.sprite.Sprite):
             offset (pygame.math.Vector2): This vector is added to the pivot.
         """
         rotated_image = transform.rotozoom(image, angle, scale)  # Rotate the image.
-        rotated_offset = offset.rotate(-angle) / scale#/ offset.length()# * scale#/ scale # Rotate the offset vector.
+        rotated_offset = offset.rotate(-angle) * scale#/ offset.length()# * scale#/ scale # Rotate the offset vector.
         # Add the offset vector to the center/pivot point to shift the rect.
         rect = rotated_image.get_rect(center= pivot + rotated_offset)
         return rotated_image, rect  # Return the rotated image and shifted rect.
@@ -93,6 +93,7 @@ class SpaceObject(pygame.sprite.Sprite):
 
         # iterate over all children
         for child in self.children:
+            child.root_screen = self.root_screen
             child.camera_pos = self.camera_pos
             child.rot_angle = self.rot_angle
             child.scale = self.scale
@@ -115,8 +116,8 @@ class SpaceObject(pygame.sprite.Sprite):
 
 class Ship(SpaceObject):
 
-    def __init__(self, name='', **kwargs):
-        super().__init__(name = name, **kwargs)
+    def __init__(self, name='', type='', **kwargs):
+        super().__init__(name = name, type=type, **kwargs)
         pygame.mixer.pre_init(44100, 16, 2, 4096)
         
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
@@ -225,8 +226,8 @@ class Ship(SpaceObject):
 
 
 class Asteroid(SpaceObject):
-    def __init__(self, name='', astrosize='L1', **kwargs):
-        super().__init__(name=name, **kwargs)
+    def __init__(self, name='', astrosize='L1', type='', **kwargs):
+        super().__init__(name=name, type=type, **kwargs)
         im_path = ''
         if astrosize == 'L0':
             im_path = PATH_ASTRO_L0
@@ -242,8 +243,8 @@ class Asteroid(SpaceObject):
 
 class DockingSpot(SpaceObject):
     
-    def __init__(self, name='', **kwargs) -> None:
-        super().__init__(name=name, **kwargs)
+    def __init__(self, name='', type='', **kwargs) -> None:
+        super().__init__(name=name, type=type, **kwargs)
         self.image = pygame.image.load(file_path + PATH_LAND).convert_alpha()
         self.surf = self.image
         pass
