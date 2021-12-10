@@ -18,17 +18,18 @@ from gym_space_docking.envs.space_objects import *
 local_path = os.path.curdir
 
 
-window_width, window_height = 800, 420#1200, 640
+window_width, window_height = 1200, 640
 
-SCREENFLAGS = pygame.RESIZABLE | pygame.SCALED
+SCREENFLAGS = pygame.RESIZABLE | pygame.SCALED | pygame.DOUBLEBUF
 
 class Space_Docking_Env(gym.Env):
     def __init__(self,env_config={}):
 
         self.camera_pos = math.Vector2(0,0)
-        self.camera_scale = 0.5
+        self.camera_scale = 0.2
 
         pygame.init()
+        self.window = pygame.Surface((window_width, window_height))
         self.init_render()
         metadata = {'render.modes': ['human', 'rgb_array']}  
         self.observation_space = spaces.Box(low=0, high=255,
@@ -36,7 +37,7 @@ class Space_Docking_Env(gym.Env):
         
         self.action_space =  spaces.Discrete(7)
 
-        self.window = None
+        
         
         
         #self.init_render()
@@ -44,7 +45,7 @@ class Space_Docking_Env(gym.Env):
 
     def init_render(self):
         
-        self.window = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS)#, vsync=True)
+        self.window_display = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS)#, vsync=True)
         self.clock = pygame.time.Clock()
         self.init_level()
         
@@ -71,9 +72,10 @@ class Space_Docking_Env(gym.Env):
         if mode == 'rgb_array':
             pass
         elif mode == 'human':
+            self.window_display.fill((5,52,103))
             self.window.fill((5,52,103))
             
-            self.camera_pos = self.player.pos - math.Vector2(window_width/2,window_height/2)
+            self.camera_pos = self.player.pos - math.Vector2(window_width / 2 / self.camera_scale,window_height / 2 / self.camera_scale)
 
             for obj in self.objects:
                 obj.scale = self.camera_scale
@@ -91,6 +93,9 @@ class Space_Docking_Env(gym.Env):
             self.get_observation()
             self.draw_gui()
             
+            #pygame.display.update()
+            self.window_display.blit(self.window, (0,0))
+            #pygame.display.flip()
             pygame.display.update()
         
 
@@ -111,15 +116,18 @@ class Space_Docking_Env(gym.Env):
 
         # calculate distance player to objects
 
-
-
+        # scale: 2px = 1m
+        nearest = 99999
+        n_name = ''
         for item in self.objects:
             #print(self.player.pos)
             distance = self.player.pos.distance_to(item.pos)
             distance_vec = item.pos - self.player.pos 
-            
+            if distance < nearest:
+                nearest = distance
+                n_name = item.name
             #print(distance, distance_vec, item.name['name'])
-
+        print(n_name, nearest)
         return np.random.randint(3)
 
 
@@ -155,11 +163,11 @@ class Space_Docking_Env(gym.Env):
                 #print('player rect collide with ', i.name['name'])
                 i_mask = pygame.mask.from_surface(i.surf)
                 
-                off = (i.pos - math.Vector2(i.surf.get_rect().center)) - (self.player.pos - math.Vector2(self.player.surf.get_rect().center))
+                off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
                 
                 col = player_mask.overlap(i_mask, off)
                 if col != None:
-                        #print(col, i.name)
+                        print(col, i.name)
                         return True
         return False
 
@@ -170,22 +178,34 @@ class Space_Docking_Env(gym.Env):
 
             # create basic level 
             self.player = Ship(name='Player')
-            self.astro = Asteroid(astrosize='L0', name='astro_0')
-            self.astro_0 = Asteroid(astrosize='L1', name='astro_1')
-            self.astro_0.rot_vel = -0.04
-            self.astro_0.pos = math.Vector2(700, 500)
-            self.astro.rot_vel = 0.05
-            self.astro.pos = math.Vector2(200, 100)
-            self.player.pos = math.Vector2(200, 200)
+            self.player.pos = math.Vector2(600, 600)
             self.dock = DockingSpot(name='Docking_Spot')
             self.dock.pos = math.Vector2(100, 600)
             self.objects = pygame.sprite.Group()
-            self.objects.add(self.astro)
-            self.objects.add(self.astro_0)
             self.objects.add(self.dock)
-
-            self.station = SpaceStation(name='Station')
-            self.objects.add(self.station)
+            
+            for i in range(300):
+                size = 'med'
+                if i % 40 == 0:
+                    size = 'L0'
+                if i % 80 == 0:
+                    size = 'L1'
+                astro = Asteroid(astrosize=size, name='astro_'+str(i), type='astro')
+                coord = math.Vector2()
+                while True:
+                    coord.x = np.random.randint(-4000, 4000)
+                    coord.y = np.random.randint(-4000, 4000)
+                    if coord.distance_to(self.dock.pos) > 700:
+                        break
+                angle = np.random.randint(0, 360)
+                rot_vel = np.random.uniform(-0.5,0.5)
+                astro.pos = coord
+                astro.rot_angle = angle
+                astro.rot_vel = rot_vel
+                self.objects.add(astro)
+            #self.station = SpaceStation(name='Station')
+            #self.station.rot_vel = -0.1
+            #self.objects.add(self.station)
             
             for i in self.objects:
                 i.camera_pos = self.camera_pos
