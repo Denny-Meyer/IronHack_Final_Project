@@ -148,7 +148,7 @@ class Ship(SpaceObject):
             strafe = 0
             rotation = 0
         
-        if action == ACTION_MAIN:
+        elif action == ACTION_MAIN:
             self.set_main_thruster(True)
             acceleration = 1  
         
