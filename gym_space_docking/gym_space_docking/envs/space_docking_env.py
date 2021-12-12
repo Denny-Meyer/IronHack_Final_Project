@@ -20,7 +20,7 @@ local_path = os.path.curdir
 
 SCALE = 0.3
 window_width, window_height = 320, 240#1200, 640
-
+#os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #pygame.RESIZABLE |
 
 class Space_Docking_Env(gym.Env):
@@ -44,14 +44,11 @@ class Space_Docking_Env(gym.Env):
           
         self.observation_space = spaces.Box(low=0, high=255,
                                         shape=(88, 80), dtype=np.uint8)
-        
         self.action_space =  spaces.Discrete(7)
         
-        #self.init_render()
-        #self.init_level()
 
-    def init_render(self):
-        
+
+    def init_render(self):        
         self.window_display = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS)#, vsync=True)
         
         
@@ -83,7 +80,10 @@ class Space_Docking_Env(gym.Env):
 
             self.camera_scale = SCALE
             
-            self.camera_pos = self.player.pos - math.Vector2(window_width / 2 / self.camera_scale,window_height / 2 / self.camera_scale)
+            #self.window.get_rect().center = self.player.pos
+            
+            #self.camera_pos = self.player.pos - self.window.get_rect
+            #self.camera_pos = self.player.pos + math.Vector2(int(window_width / 2 / self.camera_scale), int(window_height / 2 / self.camera_scale))
 
             for obj in self.objects:
                 obj.root_screen = self.window
@@ -93,13 +93,16 @@ class Space_Docking_Env(gym.Env):
                 
 
                 #self.window.blit(obj.surf, (obj.pos_x - obj.surf.get_rect().centerx, obj.pos_y - obj.surf.get_rect().centery))
-            self.player.root_screen = self.window
-            self.player.scale = self.camera_scale
-            self.player.camera_pos = self.camera_pos
-            self.player.update()
+            #self.player.root_screen = self.window
+            #self.player.scale = self.camera_scale
+            #self.player.camera_pos = self.camera_pos
+            #self.player.update()
 
-            self.check_for_player_collision()
+            if self.check_for_player_collision():
+                self.init_level()
+            
             self.get_observation()
+            
             
             #pygame.display.update()
             self.window_display.blit(self.window, (0,0))
@@ -120,10 +123,10 @@ class Space_Docking_Env(gym.Env):
             obj.camera_pos = self.camera_pos #+ math.Vector2(window_width/2,window_height/2)
             obj.update()
         
-        self.player.scale = scale
-        self.player.camera_pos = self.camera_pos
-        self.player.root_screen = surface
-        self.player.update()
+        #self.player.scale = scale
+        #self.player.camera_pos = self.camera_pos
+        #self.player.root_screen = surface
+        #self.player.update()
 
         return surface
     
@@ -186,14 +189,18 @@ class Space_Docking_Env(gym.Env):
     def init_level(self):
 
             # create basic level 
+
+            self.objects = pygame.sprite.Group()
+            
+
             self.player = Ship(name='Player', type='ship')
-            self.player.pos = math.Vector2(600, 600)
+            self.player.pos = math.Vector2(0, 00)
+            '''
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
             self.dock.pos = math.Vector2(100, 600)
-            self.objects = pygame.sprite.Group()
             self.objects.add(self.dock)
             
-            for i in range(150):
+            for i in range(200):
                 size = 'med'
                 if i % 40 == 0:
                     size = 'L0'
@@ -202,23 +209,30 @@ class Space_Docking_Env(gym.Env):
                 astro = Asteroid(astrosize=size, name='astro_'+str(i), type='asteroid')
                 coord = math.Vector2()
                 while True:
-                    coord.x = np.random.randint(-4000, 4000)
-                    coord.y = np.random.randint(-4000, 4000)
-                    if coord.distance_to(self.dock.pos) > 700:
+                    rn_angle = np.random.uniform(0, 2*m.pi)
+                    dist = np.random.randint(-18000, 18000)
+                    coord.x = dist * np.sin(rn_angle)
+                    coord.y = dist * np.cos(rn_angle)
+                    
+                    if coord.distance_to(self.dock.pos) > 2500:
                         break
                 angle = np.random.randint(0, 360)
-                rot_vel = np.random.uniform(-0.5,0.5)
+                rot_vel = np.random.uniform(-0.1,0.1)
                 astro.pos = coord
                 astro.rot_angle = angle
                 astro.rot_vel = rot_vel
                 self.objects.add(astro)
             
+            station = SpaceStation(name='Station 42', type='station')
+            self.objects.add(station)
+            '''
+            self.objects.add(self.player)
             
             for i in self.objects:
                 i.camera_pos = self.camera_pos
                 i.scale = self.camera_scale
                 i.root_screen = self.window
-            self.player.root_screen = self.window
+            #self.player.root_screen = self.window
             pass
 
 

@@ -1,11 +1,12 @@
 #from _typeshed import Self
 import numpy as np
 import pygame
-from pygame import transform, mixer, math
+from pygame import Vector2, transform, mixer, math
 from pygame import image
 from pygame.locals import *
 import os
 import math as m
+import copy
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -59,37 +60,28 @@ class SpaceObject(pygame.sprite.Sprite):
         self.root_screen = None
         self.children = []
         
-    
-    def rotate(self, image, angle=0, pivot=math.Vector2(0,0), offset=math.Vector2(0,0), scale=1.0):
-
-        """Rotate the surface around the pivot point.
-        Args:
-            surface (pygame.Surface): The surface that is to be rotated.
-            angle (float): Rotate by this angle.
-            pivot (tuple, list, pygame.math.Vector2): The pivot point.
-            offset (pygame.math.Vector2): This vector is added to the pivot.
-        """
-        rotated_image = transform.rotozoom(image, angle, scale)  # Rotate the image.
-        rotated_offset = self.offset.rotate(-angle) #* scale#/ offset.length()# * scale#/ scale # Rotate the offset vector.
-        # Add the offset vector to the center/pivot point to shift the rect.
-        rect = rotated_image.get_rect(center= (rotated_offset + self.pos))# * scale)# pivot + rotated_offset)
-        return rotated_image, rect  # Return the rotated image and shifted rect.
             
-    
+    def rotatePivoted(self,im, angle= 0.0, pivot=math.Vector2(), scale=1.0):
+        center = im.get_rect(center=pivot).center
+        rotated_image = pygame.transform.rotozoom(im, angle, scale)
+        new_rect = rotated_image.get_rect(center = center)
+        return rotated_image, new_rect
    
     
 
     def update(self):
         # apply rotation
         self.rot_angle += self.rot_vel
+        if self.rot_angle < 0:
+            self.rot_angle += 360
+        elif self.rot_angle > 360:
+            self.rot_angle -= 360
         # apply movement to position
         self.pos = self.pos + self.vel
 
-        #self.pivot = math.Vector2(self.image.get_rect().center)
-        #self.offset = self.scale
-        # calculate rotation and transformation
-        self.surf, self.rect = self.rotate(image=self.image, angle=self.rot_angle, offset=self.offset, pivot=self.pos, scale=self.scale)
+        self.surf, self.rect = self.rotatePivoted(self.image, self.rot_angle, self.pos, self.scale)
         
+        #print(self.name ,'center ', self.surf.get_rect().center, self.surf.get_rect())
 
         # iterate over all children
         for child in self.children:
@@ -97,20 +89,37 @@ class SpaceObject(pygame.sprite.Sprite):
             child.camera_pos = self.camera_pos
             child.rot_angle = self.rot_angle
             child.scale = self.scale
-            child.pos = self.pos# + child.offset# self.scale
+            child.pivot = self.pos
+            #child.pos = self.pos + child.offset# self.scale
             child.update()
             
             if not child.root_screen:
                 child.root_screen = self.root_screen
         #self.pos = self.pos
         # draw on root canvas
+        
         if self.root_screen:
             pos_cam = self.rect
-            pos_cam.x -= self.camera_pos.x #* self.scale
-            pos_cam.y -= self.camera_pos.y #* self.scale
+            print(pos_cam)
+            
+            pos_cam.x = int(pos_cam.x)
+            pos_cam.y = int(pos_cam.y)
+            
+            #pos_cam.x -= self.camera_pos.x #* self.scale
+            #pos_cam.y -= self.camera_pos.y #* self.scale
+            '''
+            pos_cam.x = int(pos_cam.x)
+            pos_cam.y = int(pos_cam.y)
             pos_cam.x *= self.scale
             pos_cam.y *= self.scale
-            self.root_screen.blit(self.surf, pos_cam)#self.rect)
+
+            pos_cam.x = int(pos_cam.x)
+            pos_cam.y = int(pos_cam.y)
+            '''
+            self.root_screen.blit(self.surf, pos_cam)
+        
+        #self.root_screen.blit(self.surf, self.rect)
+        
         pass
 
 
@@ -135,7 +144,9 @@ class Ship(SpaceObject):
         self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
         self.main_thruster_im.root_screen = self.root_screen
         self.main_thruster_im.pos = self.pos
+        self.main_thruster_im.pivot = self.pos
         self.main_thruster_im.offset = math.Vector2(1, 56)
+        
         self.children.append(self.main_thruster_im)
         FR = {'pos': (5,10), 'angle':(180)}
         FL = {'pos': (-5,10), 'angle':(180)}
@@ -253,21 +264,32 @@ class DockingSpot(SpaceObject):
 
 class SpaceStation(SpaceObject):
 
-    def __init__(self, name='', **kwargs) -> None:
-        super().__init__(name=name, **kwargs)
-        self.surf = pygame.Surface((10,10), pygame.SRCALPHA)
-        self.image = self.surf
+    def __init__(self, name='', type='', **kwargs) -> None:
+        super().__init__(name=name, type=type, **kwargs)
+        
+        self.image = pygame.Surface((10,10))
+        #self.surf = pygame.Surface((10,10), pygame.SRCALPHA)
+        self.surf = self.image
+        self.offset = math.Vector2(5,5)
         r1 = Station_ring_part(name='ring')
         r1.pos = self.pos
+        r1.offset = math.Vector2(-1400,-1400)
+        
+        #r1.offset = math.Vector2(r1.surf.get_width()/2, r1.surf.get_height()/2)
+        r1.pivot = r1.offset
+        
+        r2 = copy.copy(r1)
+        r2.image = pygame.transform.flip(r2.image, True,False)
+        #r2.pos = r2.pos + pygame.math.Vector2(1400,0)
+        r2.offset = math.Vector2(1400,0)
+
+        r3 = copy.copy(r1)
+        r3.image = pygame.transform.flip(r3.image, True,True)
+        #r3.pos = r3.pos + pygame.math.Vector2(1400,1400)
+        r3.offset = math.Vector2(0, 1400)
+        
         c1 = Station_center_part(name='center')
         c1.pos = self.pos
-        #r1.offset = math.Vector2(-r1.surf.get_width()/2, -r1.surf.get_height()/2)
-        
-        #r2 = Station_ring_part(name='r_top_right')
-        #r2.image = pygame.transform.flip(r2.image, True, False)
-        #r2.pos = self.pos
-        #r2.offset = math.Vector2(r2.surf.get_width()/2, -r2.surf.get_height() /2)
-
         '''
         c1 = Station_center_part('center_top_left')
         c1.pos = self.pos
@@ -299,30 +321,25 @@ class SpaceStation(SpaceObject):
         '''
         self.children.append(c1)
         self.children.append(r1)
+        self.children.append(r2)
+        self.children.append(r3)
 
 
 class Station_center_part(SpaceObject):
 
     def __init__(self, name='', **kwargs) -> None:
         super().__init__(name=name, **kwargs)
-        self.surf = pygame.Surface((400 ,400), pygame.SRCALPHA)
-        self.image = self.surf
+        #self.surf = pygame.Surface((400 ,400), pygame.SRCALPHA)
+        self.image = pygame.image.load(file_path + PATH_STATION_CENTER)
+        self.surf = self.image
 
-    def update(self):
-        if self.root_screen:
-            pygame.draw.ellipse(self.image, pygame.Color(129,58,0), (0, 0, 400, 400))
-        return super().update()
 
 class Station_ring_part(SpaceObject):
 
     def __init__(self, name='', **kwargs) -> None:
         super().__init__(name=name, **kwargs)
-        self.surf = pygame.Surface((2000,2000), pygame.SRCALPHA)
-        self.image = self.surf
+        self.image = pygame.image.load(file_path + PATH_STATION)
+        #self.surf = pygame.Surface((2000,2000), pygame.SRCALPHA)
+        self.surf = self.image
 
 
-    def update(self):
-        if self.root_screen:
-            pygame.draw.ellipse(self.image, pygame.Color(129,58,0), (0,0,2000,2000), 250)#(self.pos.x - self.camera_pos.x -300, self.pos.y -self.camera_pos.y -300, 600, 600),60)
-
-        return super().update()
