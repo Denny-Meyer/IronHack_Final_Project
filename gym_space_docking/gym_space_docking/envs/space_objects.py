@@ -70,9 +70,9 @@ class SpaceObject(pygame.sprite.Sprite):
             offset (pygame.math.Vector2): This vector is added to the pivot.
         """
         rotated_image = transform.rotozoom(image, angle, scale)  # Rotate the image.
-        rotated_offset = offset.rotate(-angle) * scale#/ offset.length()# * scale#/ scale # Rotate the offset vector.
+        rotated_offset = self.offset.rotate(-angle) #* scale#/ offset.length()# * scale#/ scale # Rotate the offset vector.
         # Add the offset vector to the center/pivot point to shift the rect.
-        rect = rotated_image.get_rect(center= pivot + rotated_offset)
+        rect = rotated_image.get_rect(center= (rotated_offset + self.pos))# * scale)# pivot + rotated_offset)
         return rotated_image, rect  # Return the rotated image and shifted rect.
             
     
@@ -106,8 +106,8 @@ class SpaceObject(pygame.sprite.Sprite):
         # draw on root canvas
         if self.root_screen:
             pos_cam = self.rect
-            pos_cam.x -= self.camera_pos.x
-            pos_cam.y -= self.camera_pos.y
+            pos_cam.x -= self.camera_pos.x #* self.scale
+            pos_cam.y -= self.camera_pos.y #* self.scale
             pos_cam.x *= self.scale
             pos_cam.y *= self.scale
             self.root_screen.blit(self.surf, pos_cam)#self.rect)

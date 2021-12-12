@@ -18,8 +18,8 @@ from gym_space_docking.envs.space_objects import *
 
 local_path = os.path.curdir
 
-SCALE = 0.5
-window_width, window_height = 640, 320#1200, 640
+SCALE = 0.3
+window_width, window_height = 320, 240#1200, 640
 
 SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #pygame.RESIZABLE |
 
@@ -33,17 +33,17 @@ class Space_Docking_Env(gym.Env):
         self.clock = pygame.time.Clock()
         
         self.window = pygame.Surface((window_width, window_height))
-        self.map_obs = pygame.Surface((160,160), pygame.SRCALPHA)
-        self.map_1 = pygame.Surface((80,80), pygame.SRCALPHA)
-        self.map_2 = pygame.Surface((80,80), pygame.SRCALPHA)
-        self.map_3 = pygame.Surface((80,80), pygame.SRCALPHA)
-        self.map_4 = pygame.Surface((80,80), pygame.SRCALPHA)
+        self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
+        self.map_1 = pygame.Surface((44,40), pygame.SRCALPHA)
+        self.map_2 = pygame.Surface((44,40), pygame.SRCALPHA)
+        self.map_3 = pygame.Surface((44,40), pygame.SRCALPHA)
+        self.map_4 = pygame.Surface((44,40), pygame.SRCALPHA)
         self.init_render()
 
         self.init_level()
           
         self.observation_space = spaces.Box(low=0, high=255,
-                                        shape=(160, 160), dtype=np.uint8)
+                                        shape=(88, 80), dtype=np.uint8)
         
         self.action_space =  spaces.Discrete(7)
         
@@ -68,7 +68,7 @@ class Space_Docking_Env(gym.Env):
         self.handle_input(action)
         self.render()
         observation = pygame.surfarray.array3d(self.map_obs)
-        observation.swapaxes(0,1)
+        #observation.swapaxes(0,1)
         reward, done, info = 0., False, {}
 
 
@@ -134,14 +134,14 @@ class Space_Docking_Env(gym.Env):
         self.map_obs.fill((0,0,0))
         #self.map_obs = pygame.Surface((80,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.05)
-        self.map_2 = self.render_scaled(self.map_2, 0.01)
-        self.map_3 = self.render_scaled(self.map_3, 0.005)
-        self.map_4 = self.render_scaled(self.map_4, 0.001)
+        self.map_2 = self.render_scaled(self.map_2, 0.005)
+        self.map_3 = self.render_scaled(self.map_3, 0.0005)
+        self.map_4 = self.render_scaled(self.map_4, 0.00005)
 
         self.map_obs.blit(self.map_1, (0,0))
-        self.map_obs.blit(self.map_2, (80, 0))
-        self.map_obs.blit(self.map_3, (0, 80))
-        self.map_obs.blit(self.map_4, (80, 80))
+        self.map_obs.blit(self.map_2, (44, 0))
+        self.map_obs.blit(self.map_3, (0, 40))
+        self.map_obs.blit(self.map_4, (44, 40))
         
         return self.map_obs
 
@@ -193,7 +193,7 @@ class Space_Docking_Env(gym.Env):
             self.objects = pygame.sprite.Group()
             self.objects.add(self.dock)
             
-            for i in range(300):
+            for i in range(150):
                 size = 'med'
                 if i % 40 == 0:
                     size = 'L0'
@@ -202,8 +202,8 @@ class Space_Docking_Env(gym.Env):
                 astro = Asteroid(astrosize=size, name='astro_'+str(i), type='asteroid')
                 coord = math.Vector2()
                 while True:
-                    coord.x = np.random.randint(-18000, 18000)
-                    coord.y = np.random.randint(-18000, 18000)
+                    coord.x = np.random.randint(-4000, 4000)
+                    coord.y = np.random.randint(-4000, 4000)
                     if coord.distance_to(self.dock.pos) > 700:
                         break
                 angle = np.random.randint(0, 360)
