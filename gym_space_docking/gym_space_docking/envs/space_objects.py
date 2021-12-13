@@ -24,11 +24,7 @@ PATH_THRUSTER_SOUND_MAIN = '/assets/thrusters.wav'
 PATH_THRUSTER_SOUND_RETRO = '/assets/retro.wav'
 
 PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
-<<<<<<< Updated upstream
-PATH_tHRUSTER_RETRO_IMG = '/assets/1x3.png'
-=======
 PATH_tHRUSTER_RETRO_IMG = '/assets/3x4.png'
->>>>>>> Stashed changes
 
 # ------------------ DISCRETE INPUT VALUES -----------------------
 ACTION_NONE = 0
@@ -158,36 +154,32 @@ class Ship(SpaceObject):
         #actions 
         self.image.fill((0,0,0,0))
         self.image.blit(self.raw_image, (self.raw_image.get_width()/2, self.raw_image.get_height()/2))
-        if action == 1:
-            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 7, self.image.get_height()/2 + 51))
-        elif action == 2:
-
-            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 4, self.image.get_height()/2 - 20))
-            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 + 4, self.image.get_height()/2 - 20))
+        if action == ACTION_MAIN:
+            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 7.5, self.image.get_height()/2 + 48))
+        elif action == ACTION_RETRO:
+            retro = pygame.transform.flip(self.thruster_retro_src, False, True)
+            self.image.blit(retro, (self.image.get_width()/2 - 10, self.image.get_height()/2 - 45))
+            self.image.blit(retro, (self.image.get_width()/2 + 8, self.image.get_height()/2 - 48))
         pass
 
     def set_main_thruster(self, active):
         if self.main_thruster_active != active:
             self.main_thruster_active = active
             if self.main_thruster_active:
-                self.set_thruster_input(1)
                 mixer.Sound.play(self.thruster_main, -1)
             else:
-                self.set_thruster_input(0)
                 mixer.Sound.stop(self.thruster_main)
     
     def set_retro_thruster(self, active):
         if self.retro_thruster_active != active:
             self.retro_thruster_active = active
             if self.retro_thruster_active:
-
-                self.set_thruster_input(2)
-
                 mixer.Sound.play(self.thruster_retro, -1)
             else:
                 mixer.Sound.stop(self.thruster_retro)
     
     def handle_input(self, action):
+        self.set_thruster_input(action)
 
         if action == ACTION_NONE:
             self.set_retro_thruster(False)
@@ -195,6 +187,8 @@ class Ship(SpaceObject):
             acceleration = 0
             strafe = 0
             rotation = 0
+            
+            
         
         elif action == ACTION_MAIN:
             self.set_main_thruster(True)
