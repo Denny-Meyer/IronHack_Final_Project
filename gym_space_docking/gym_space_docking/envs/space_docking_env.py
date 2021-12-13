@@ -18,10 +18,10 @@ from gym_space_docking.envs.space_objects import *
 
 local_path = os.path.curdir
 
-SCALE = 0.2
+SCALE = 0.3
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
-SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE 
+SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
 
 
 # reward table
@@ -106,7 +106,7 @@ class Space_Docking_Env(gym.Env):
         observation = pygame.surfarray.array3d(self.map_obs)
         self.reward += self.get_reward()
         observation.swapaxes(0,1)
-        print('reward', self.reward, self.frame_counter)
+        #print('reward', self.reward, self.frame_counter)
         info = {}
 
         self.frame_counter +=1
@@ -146,7 +146,7 @@ class Space_Docking_Env(gym.Env):
             #    self.player.destroy()
             #    self.init_level()
             
-            #self.get_observation()
+            self.get_observation()
             
             
             #pygame.display.update()
@@ -159,7 +159,7 @@ class Space_Docking_Env(gym.Env):
 
 
     def render_scaled(self, surface: pygame.Surface, scale):
-        surface.fill((255,255,255))
+        surface.fill((0,0,0,0))
         #surface = pygame.Surface((80,80), pygame.SRCALPHA)
         self.camera_pos = self.player.pos - math.Vector2(surface.get_width() / 2 / scale, surface.get_height() / 2 / scale)
         for obj in self.objects:
@@ -179,13 +179,19 @@ class Space_Docking_Env(gym.Env):
     
     def get_observation(self):
         
-        self.map_obs.fill((0,0,0))
-        #self.map_obs = pygame.Surface((80,80), pygame.SRCALPHA)
+        map_old = self.map_obs.copy()
+        back_ground = self.map_obs.copy()
+        back_ground.fill((255,255,255))
+        map_old.set_alpha(249)
+        
+        self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.05)
         self.map_2 = self.render_scaled(self.map_2, 0.005)
         self.map_3 = self.render_scaled(self.map_3, 0.001)
         self.map_4 = self.render_scaled(self.map_4, 0.00009)
 
+        self.map_obs.blit(back_ground,(0,0))
+        self.map_obs.blit(map_old, (0,0))
         self.map_obs.blit(self.map_1, (0,0))
         self.map_obs.blit(self.map_2, (44, 0))
         self.map_obs.blit(self.map_3, (0, 40))
@@ -291,6 +297,7 @@ class Space_Docking_Env(gym.Env):
             self.last_distance = 0
             self.is_in_docking_range = False
             self.docking_counter = 0
+            self.collide_astro = False
             self.frame_counter = 0
             
             
