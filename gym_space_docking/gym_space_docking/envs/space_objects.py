@@ -24,7 +24,11 @@ PATH_THRUSTER_SOUND_MAIN = '/assets/thrusters.wav'
 PATH_THRUSTER_SOUND_RETRO = '/assets/retro.wav'
 
 PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
+<<<<<<< Updated upstream
 PATH_tHRUSTER_RETRO_IMG = '/assets/1x3.png'
+=======
+PATH_tHRUSTER_RETRO_IMG = '/assets/3x4.png'
+>>>>>>> Stashed changes
 
 # ------------------ DISCRETE INPUT VALUES -----------------------
 ACTION_NONE = 0
