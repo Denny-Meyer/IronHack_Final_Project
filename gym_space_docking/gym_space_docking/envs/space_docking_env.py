@@ -100,7 +100,7 @@ class Space_Docking_Env(gym.Env):
         if self.docking_counter > 100:
             self.reward += 100
             done = True
-        if self.frame_counter > 3000:
+        if self.frame_counter > 5000:
             done = True
 
         observation = pygame.surfarray.array3d(self.map_obs)
@@ -282,7 +282,7 @@ class Space_Docking_Env(gym.Env):
             
 
             self.player = Ship(name='Player', type='ship')
-            self.player.pos = math.Vector2(6000, 300)
+            self.player.pos = math.Vector2(4000, 300)
             
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
             self.dock.pos = math.Vector2(100, 600)
