@@ -156,10 +156,10 @@ class Ship(SpaceObject):
         self.image.blit(self.raw_image, (self.raw_image.get_width()/2, self.raw_image.get_height()/2))
         if action == 1:
             self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 7, self.image.get_height()/2 + 51))
-        if action == 2:
+        elif action == 2:
 
-            self.image.blit(self.thruster_retro_src, (self.image.get_width()/2 - 4, self.image.get_height()/2 - 51))
-            self.image.blit(self.thruster_retro_src, (self.image.get_width()/2 + 4, self.image.get_height()/2 - 51))
+            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 4, self.image.get_height()/2 - 20))
+            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 + 4, self.image.get_height()/2 - 20))
         pass
 
     def set_main_thruster(self, active):
