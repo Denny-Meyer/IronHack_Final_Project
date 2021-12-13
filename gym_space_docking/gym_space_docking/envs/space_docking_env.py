@@ -18,7 +18,7 @@ from gym_space_docking.envs.space_objects import *
 
 local_path = os.path.curdir
 
-SCALE = 0.3
+SCALE = 0.2
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE 
@@ -29,6 +29,7 @@ SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE
 # increase distance -1
 # decrease distance +1 
 #
+last_distance = 0
 
 
 
@@ -163,10 +164,24 @@ class Space_Docking_Env(gym.Env):
         
         return self.map_obs
 
+# ----------Ccalculate Rewards------------------------------
 
     def get_reward(self):
         # check distance to target
         distance = self.player.pos.distance_to(self.dock.pos)
+
+        if last_distance < distance :
+            # give penalty
+            pass
+        else:
+            # give bonus
+            pass
+        angle_target = self.dock.rot_angle
+        angle_self = self.player.rot_angle
+        if angle_self - angle_target < 5 or angle_self - angle_target > 355:
+            print(angle_self - angle_target)
+        else:
+            print('outside')
         #print('distance to docking platform', int(distance/2))
 
         pass
@@ -186,19 +201,19 @@ class Space_Docking_Env(gym.Env):
         #print(self.player.surf.get_rect())
         player_mask = pygame.mask.from_surface(self.player.surf)
         for i in self.objects:
-            if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
+            #if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
                 
-                i_mask = pygame.mask.from_surface(i.surf)
-                
-                off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
-                #print(off)
-                col = player_mask.overlap(i_mask, off)
-                if col != None:
-                    if i.type == 'asteroid':
-                        print(col, i.name)
-                        return True
-                    elif i.type == 'docking':
-                        print('on docking field')
+            i_mask = pygame.mask.from_surface(i.surf)
+            
+            off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
+            #print(off)
+            col = player_mask.overlap(i_mask, off)
+            if col != None:
+                if i.type == 'asteroid':
+                    print(col, i.name)
+                    return True
+                elif i.type == 'docking':
+                    print('on docking field')
         return False
 
 
@@ -216,19 +231,19 @@ class Space_Docking_Env(gym.Env):
             
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
             self.dock.pos = math.Vector2(100, 600)
-            self.objects.add(self.dock)
+            
             
             for i in range(50):
                 size = 'med'
-                if i % 20 == 0:
+                if i % 5 == 0:
                     size = 'L1'
-                if i % 40 == 0:
+                if i % 10 == 0:
                     size = 'L0'
                 astro = Asteroid(astrosize=size, name='astro_'+str(i), type='asteroid')
                 coord = math.Vector2()
                 while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-18000, 18000)
+                    dist = np.random.randint(-4800, 4800)
                     coord.x = dist * np.sin(rn_angle)
                     coord.y = dist * np.cos(rn_angle)
                     
@@ -244,7 +259,7 @@ class Space_Docking_Env(gym.Env):
             station = SpaceStation(name='Station 42', type='station')
             #station.rot_vel = -0.03
             self.objects.add(station)
-            
+            self.objects.add(self.dock)
             self.objects.add(self.player)
             
             for i in self.objects:
@@ -252,6 +267,10 @@ class Space_Docking_Env(gym.Env):
                 i.scale = self.camera_scale
                 i.root_screen = self.window
             #self.player.root_screen = self.window
+
+
+            last_distance = self.player.pos.distance_to(self.dock.pos)
+
             pass
 
 

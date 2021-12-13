@@ -111,6 +111,12 @@ class SpaceObject(pygame.sprite.Sprite):
             y -= self.camera_pos.y * self.scale
             
             self.root_screen.blit(self.surf, (x,y))
+
+            if self.type == 'docking':
+                self.root_screen.set_at((int(x),int(y)), (255,0,0))
+            if self.type == 'ship':
+                self.root_screen.set_at((int(self.root_screen.get_rect().width / 2),int(self.root_screen.get_rect().height/2)), (0,255,0))
+
         
         pass
 
@@ -160,6 +166,25 @@ class Ship(SpaceObject):
             retro = pygame.transform.flip(self.thruster_retro_src, False, True)
             self.image.blit(retro, (self.image.get_width()/2 - 10, self.image.get_height()/2 - 45))
             self.image.blit(retro, (self.image.get_width()/2 + 8, self.image.get_height()/2 - 48))
+        
+        elif action == ACTION_STRAFE_RIGHT:
+            str_right = pygame.transform.rotate(self.thruster_retro_src, -90)
+            self.image.blit(str_right, (self.image.get_width()/2 - 16, self.image.get_height()/2 - 35))
+            self.image.blit(str_right, (self.image.get_width()/2 - 16, self.image.get_height()/2 + 35))
+        elif action == ACTION_STRAFE_LEFT:
+            str_left = pygame.transform.rotate(self.thruster_retro_src, 90)
+            self.image.blit(str_left, (self.image.get_width()/2 + 12, self.image.get_height()/2 - 35))
+            self.image.blit(str_left, (self.image.get_width()/2 + 10, self.image.get_height()/2 + 35))
+        elif action == ACTION_TURN_RIGHT:
+            str_right = pygame.transform.rotate(self.thruster_retro_src, -90)
+            str_left = pygame.transform.rotate(self.thruster_retro_src, 90)
+            self.image.blit(str_right, (self.image.get_width()/2 - 16, self.image.get_height()/2 - 35))
+            self.image.blit(str_left, (self.image.get_width()/2 + 10, self.image.get_height()/2 + 35))
+        elif action == ACTION_TURN_LEFT:
+            str_right = pygame.transform.rotate(self.thruster_retro_src, -90)
+            str_left = pygame.transform.rotate(self.thruster_retro_src, 90)
+            self.image.blit(str_right, (self.image.get_width()/2 - 16, self.image.get_height()/2 + 35))
+            self.image.blit(str_left, (self.image.get_width()/2 + 12, self.image.get_height()/2 - 35))
         pass
 
     def set_main_thruster(self, active):
