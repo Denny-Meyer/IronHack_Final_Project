@@ -18,10 +18,10 @@ from gym_space_docking.envs.space_objects import *
 
 local_path = os.path.curdir
 
-SCALE = 0.25
+SCALE = 0.2
 window_width, window_height = 320, 240#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
-SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #pygame.RESIZABLE |
+SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE 
 
 
 # reward table
@@ -167,7 +167,7 @@ class Space_Docking_Env(gym.Env):
     def get_reward(self):
         # check distance to target
         distance = self.player.pos.distance_to(self.dock.pos)
-        print(distance/2)
+        #print('distance to docking platform', int(distance/2))
 
         pass
 
@@ -182,15 +182,16 @@ class Space_Docking_Env(gym.Env):
 # ----------- Simple Physics -----------------------------------------
 
     def check_for_player_collision(self) -> bool:
-
+        
+        #print(self.player.surf.get_rect())
         player_mask = pygame.mask.from_surface(self.player.surf)
         for i in self.objects:
             if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
-                #print('player rect collide with ', i.name['name'])
+                
                 i_mask = pygame.mask.from_surface(i.surf)
                 
                 off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
-                
+                #print(off)
                 col = player_mask.overlap(i_mask, off)
                 if col != None:
                     if i.type == 'asteroid':
@@ -217,12 +218,12 @@ class Space_Docking_Env(gym.Env):
             self.dock.pos = math.Vector2(100, 600)
             self.objects.add(self.dock)
             
-            for i in range(400):
+            for i in range(50):
                 size = 'med'
                 if i % 20 == 0:
-                    size = 'L0'
-                if i % 40 == 0:
                     size = 'L1'
+                if i % 40 == 0:
+                    size = 'L0'
                 astro = Asteroid(astrosize=size, name='astro_'+str(i), type='asteroid')
                 coord = math.Vector2()
                 while True:
