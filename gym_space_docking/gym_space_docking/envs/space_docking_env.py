@@ -56,6 +56,10 @@ class Space_Docking_Env(gym.Env):
         self.action_space =  spaces.Discrete(7)
         self.reward = 0
         self.last_distance = 0
+        self.is_in_docking_range = False
+        self.docking_counter = 0
+        self.collide_astro = False
+
 
 
     def init_render(self):        
@@ -79,17 +83,28 @@ class Space_Docking_Env(gym.Env):
         #print('action',action)
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         self.handle_input(action)
+        
+        self.map_obs = self.get_observation()
+        
+
         self.render()
-        observation = pygame.surfarray.array3d(self.map_obs)
-        self.reward += self.get_reward()
-        if self.check_for_player_collision:
+
+        if self.collide_astro:
+            print('collide')
             self.reward -= 100
             done = True
-        #observation.swapaxes(0,1)
-        reward, done, info = 0., False, {}
+        if self.reward < -100:
+            done = True
+            print('over limit')
+
+        observation = pygame.surfarray.array3d(self.map_obs)
+        self.reward += self.get_reward()
+        observation.swapaxes(0,1)
+        print('reward', self.reward, done)
+        info = {}
 
 
-        return observation, reward, done, info
+        return observation, self.reward, done, info
     
 
     def render(self, mode='human', close=False):
@@ -118,12 +133,14 @@ class Space_Docking_Env(gym.Env):
             #self.player.camera_pos = self.camera_pos
             #self.player.update()
 
+            self.collide_astro = False
             if self.check_for_player_collision():
                 self.player.handle_input(0)
-                self.player.destroy()
-                self.init_level()
+                self.collide_astro = True
+            #    self.player.destroy()
+            #    self.init_level()
             
-            self.get_observation()
+            #self.get_observation()
             
             
             #pygame.display.update()
@@ -170,7 +187,7 @@ class Space_Docking_Env(gym.Env):
         
         return self.map_obs
 
-# ----------Ccalculate Rewards------------------------------
+# ----------calculate Rewards------------------------------
 
     def get_reward(self):
         # check distance to target
@@ -178,27 +195,34 @@ class Space_Docking_Env(gym.Env):
         reward = 0
         distance = self.player.pos.distance_to(self.dock.pos)
 
-        if self.last_distance < distance :
+        #if self.last_distance - distance < 100 and 
+        if self.last_distance > distance:
             # give penalty
-            reward -= 1
-            pass
-        else:
+            reward += 0.1
+            self.last_distance = distance
+        elif self.last_distance < distance:
+        #self.last_distance - distance > 100 and self.last_distance < distance:
             # give bonus
-            reward += 1
+            reward -= 0.1
+            self.last_distance = distance
             if distance < 100:
-                reward += 5
-            pass
+                reward += 0.5
+            
         angle_target = self.dock.rot_angle
         angle_self = self.player.rot_angle
 
         if distance < 100:
             if angle_self - angle_target < 5 or angle_self - angle_target > 355:
                 print(angle_self - angle_target)
-                reward += 2
+                reward += 0.2
             else:
                 print('outside')
-                reward -= 3
+                reward -= 0.3
         #print('distance to docking platform', int(distance/2))
+
+        reward -= 0.01
+
+
         return reward
         pass
 
@@ -227,9 +251,13 @@ class Space_Docking_Env(gym.Env):
             if col != None:
                 if i.type == 'asteroid':
                     print(col, i.name)
+                    self.collide_astro = True
                     return True
                 elif i.type == 'docking':
                     print('on docking field')
+                    self.is_in_docking_range = True
+                else:
+                    self.is_in_docking_range = False
         return False
 
 
@@ -247,6 +275,11 @@ class Space_Docking_Env(gym.Env):
             
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
             self.dock.pos = math.Vector2(100, 600)
+
+            self.reward = 0
+            self.last_distance = 0
+            self.is_in_docking_range = False
+            self.docking_counter = 0
             
             
             for i in range(50):
