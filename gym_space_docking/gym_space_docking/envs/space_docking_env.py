@@ -96,6 +96,9 @@ class Space_Docking_Env(gym.Env):
         if self.reward < -100:
             done = True
             print('over limit')
+        if self.docking_counter > 100:
+            self.reward += 100
+            done = True
 
         observation = pygame.surfarray.array3d(self.map_obs)
         self.reward += self.get_reward()
@@ -224,7 +227,6 @@ class Space_Docking_Env(gym.Env):
 
 
         return reward
-        pass
 
 
 # ----------- Handle Input -------------------------------------------
@@ -241,23 +243,26 @@ class Space_Docking_Env(gym.Env):
         #print(self.player.surf.get_rect())
         player_mask = pygame.mask.from_surface(self.player.surf)
         for i in self.objects:
-            #if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
+            if self.player.pos.distance_to(i.pos) < 400:
+                #if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
+                    
+                i_mask = pygame.mask.from_surface(i.surf)
                 
-            i_mask = pygame.mask.from_surface(i.surf)
-            
-            off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
-            #print(off)
-            col = player_mask.overlap(i_mask, off)
-            if col != None:
-                if i.type == 'asteroid':
-                    print(col, i.name)
-                    self.collide_astro = True
-                    return True
-                elif i.type == 'docking':
-                    print('on docking field')
-                    self.is_in_docking_range = True
-                else:
-                    self.is_in_docking_range = False
+                off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
+                #print(off)
+                col = player_mask.overlap(i_mask, off)
+                if col != None:
+                    if i.type == 'asteroid':
+                        print(col, i.name)
+                        self.collide_astro = True
+                        return True
+                    elif i.type == 'docking':
+                        print('on docking field')
+                        self.is_in_docking_range = True
+                        self.docking_counter += 1
+                    else:
+                        self.is_in_docking_range = False
+                        self.docking_counter = 0
         return False
 
 
@@ -271,7 +276,7 @@ class Space_Docking_Env(gym.Env):
             
 
             self.player = Ship(name='Player', type='ship')
-            self.player.pos = math.Vector2(0, 00)
+            self.player.pos = math.Vector2(6000, 300)
             
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
             self.dock.pos = math.Vector2(100, 600)
