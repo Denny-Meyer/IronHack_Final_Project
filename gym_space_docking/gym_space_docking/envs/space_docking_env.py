@@ -59,6 +59,7 @@ class Space_Docking_Env(gym.Env):
         self.is_in_docking_range = False
         self.docking_counter = 0
         self.collide_astro = False
+        self.frame_counter = 0
 
 
 
@@ -93,20 +94,22 @@ class Space_Docking_Env(gym.Env):
             print('collide')
             self.reward -= 100
             done = True
-        if self.reward < -100:
+        if self.reward < -50:
             done = True
             print('over limit')
         if self.docking_counter > 100:
             self.reward += 100
             done = True
+        if self.frame_counter > 3000:
+            done = True
 
         observation = pygame.surfarray.array3d(self.map_obs)
         self.reward += self.get_reward()
         observation.swapaxes(0,1)
-        print('reward', self.reward, done)
+        print('reward', self.reward, self.frame_counter)
         info = {}
 
-
+        self.frame_counter +=1
         return observation, self.reward, done, info
     
 
@@ -199,14 +202,17 @@ class Space_Docking_Env(gym.Env):
         distance = self.player.pos.distance_to(self.dock.pos)
 
         #if self.last_distance - distance < 100 and 
-        if self.last_distance > distance:
+        if int(self.last_distance) > int(distance):
             # give penalty
-            reward += 0.1
+            if self.last_distance - distance > 10:
+                reward += 0.1
+            else:
+                reward += 0.01
             self.last_distance = distance
-        elif self.last_distance < distance:
+        elif int(self.last_distance) < int(distance):
         #self.last_distance - distance > 100 and self.last_distance < distance:
             # give bonus
-            reward -= 0.1
+            reward -= 0.5
             self.last_distance = distance
             if distance < 100:
                 reward += 0.5
@@ -285,13 +291,14 @@ class Space_Docking_Env(gym.Env):
             self.last_distance = 0
             self.is_in_docking_range = False
             self.docking_counter = 0
+            self.frame_counter = 0
             
             
-            for i in range(50):
+            for i in range(150):
                 size = 'med'
-                if i % 5 == 0:
-                    size = 'L1'
                 if i % 10 == 0:
+                    size = 'L1'
+                if i % 20 == 0:
                     size = 'L0'
                 astro = Asteroid(astrosize=size, name='astro_'+str(i), type='asteroid')
                 coord = math.Vector2()
