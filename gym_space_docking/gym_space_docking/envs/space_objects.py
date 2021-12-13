@@ -3,6 +3,7 @@ import numpy as np
 import pygame
 from pygame import Vector2, transform, mixer, math
 from pygame import image
+from pygame.display import update
 from pygame.locals import *
 import os
 import math as m
@@ -64,7 +65,7 @@ class SpaceObject(pygame.sprite.Sprite):
     def rotatePivoted(self,im, angle= 0.0, pivot=math.Vector2(), scale=1.0):
         center = im.get_rect(center=pivot).center
         rotated_image = pygame.transform.rotozoom(im, angle, scale)
-        new_rect = rotated_image.get_rect(center = center)
+        new_rect = rotated_image.get_rect(center = pivot)
         return rotated_image, new_rect
    
     
@@ -77,7 +78,7 @@ class SpaceObject(pygame.sprite.Sprite):
         elif self.rot_angle > 360:
             self.rot_angle -= 360
         # apply movement to position
-        self.pos = self.pos + self.vel
+        self.pos = self.pos + (self.vel)# * self.scale)
 
         self.surf, self.rect = self.rotatePivoted(self.image, self.rot_angle, self.pos, self.scale)
         
@@ -99,26 +100,17 @@ class SpaceObject(pygame.sprite.Sprite):
         # draw on root canvas
         
         if self.root_screen:
-            pos_cam = self.rect
-            print(pos_cam)
             
-            pos_cam.x = int(pos_cam.x)
-            pos_cam.y = int(pos_cam.y)
+            x = (self.pos.x * self.scale) + self.rect.x 
+            y = (self.pos.y * self.scale) + self.rect.y 
             
-            #pos_cam.x -= self.camera_pos.x #* self.scale
-            #pos_cam.y -= self.camera_pos.y #* self.scale
-            '''
-            pos_cam.x = int(pos_cam.x)
-            pos_cam.y = int(pos_cam.y)
-            pos_cam.x *= self.scale
-            pos_cam.y *= self.scale
+            x -= self.pos.x 
+            y -= self.pos.y 
 
-            pos_cam.x = int(pos_cam.x)
-            pos_cam.y = int(pos_cam.y)
-            '''
-            self.root_screen.blit(self.surf, pos_cam)
-        
-        #self.root_screen.blit(self.surf, self.rect)
+            x -= self.camera_pos.x * self.scale
+            y -= self.camera_pos.y * self.scale
+            
+            self.root_screen.blit(self.surf, (x,y))
         
         pass
 
@@ -127,15 +119,18 @@ class Ship(SpaceObject):
 
     def __init__(self, name='', type='', **kwargs):
         super().__init__(name = name, type=type, **kwargs)
-        pygame.mixer.pre_init(44100, 16, 2, 4096)
+        
+        pygame.mixer.init(44100, 16, 2, 4096)
         
         self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
         self.surf = self.image
-        self.thruster_main = mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
+
+        self.thruster_main =  mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
         self.thruster_retro = mixer.Sound(file_path + PATH_THRUSTER_SOUND_RETRO)
         mixer.Sound.set_volume(self.thruster_main, 0.5)
         mixer.Sound.set_volume(self.thruster_retro, 0.3)
         mixer.Sound.fadeout(self.thruster_main, 10)
+        
 
         self.main_thruster_active = False
         self.retro_thruster_active = False
@@ -272,21 +267,19 @@ class SpaceStation(SpaceObject):
         self.surf = self.image
         self.offset = math.Vector2(5,5)
         r1 = Station_ring_part(name='ring')
-        r1.pos = self.pos
-        r1.offset = math.Vector2(-1400,-1400)
-        
-        #r1.offset = math.Vector2(r1.surf.get_width()/2, r1.surf.get_height()/2)
-        r1.pivot = r1.offset
+        r1.pos = self.pos + (-r1.image.get_width()/2, -r1.image.get_height()/2)
         
         r2 = copy.copy(r1)
         r2.image = pygame.transform.flip(r2.image, True,False)
-        #r2.pos = r2.pos + pygame.math.Vector2(1400,0)
-        r2.offset = math.Vector2(1400,0)
+        r2.pos = self.pos + (r2.image.get_width()/2 , -r2.image.get_height()/2)
 
         r3 = copy.copy(r1)
         r3.image = pygame.transform.flip(r3.image, True,True)
-        #r3.pos = r3.pos + pygame.math.Vector2(1400,1400)
-        r3.offset = math.Vector2(0, 1400)
+        r3.pos = self.pos + (r3.image.get_width()/2, r3.image.get_height()/2)
+
+        r4 = copy.copy(r1)
+        r4.image = pygame.transform.flip(r4.image, False,True)
+        r4.pos = self.pos + (-r4.image.get_width()/2, r4.image.get_height()/2)
         
         c1 = Station_center_part(name='center')
         c1.pos = self.pos
@@ -323,6 +316,7 @@ class SpaceStation(SpaceObject):
         self.children.append(r1)
         self.children.append(r2)
         self.children.append(r3)
+        self.children.append(r4)
 
 
 class Station_center_part(SpaceObject):
@@ -341,5 +335,9 @@ class Station_ring_part(SpaceObject):
         self.image = pygame.image.load(file_path + PATH_STATION)
         #self.surf = pygame.Surface((2000,2000), pygame.SRCALPHA)
         self.surf = self.image
+
+    
+    #def update(self):
+    #    return
 
 
