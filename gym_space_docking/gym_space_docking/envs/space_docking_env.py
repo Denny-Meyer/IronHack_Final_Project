@@ -18,7 +18,7 @@ from gym_space_docking.envs.space_objects import *
 
 local_path = os.path.curdir
 
-SCALE = 0.3
+SCALE = 0.4
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE 

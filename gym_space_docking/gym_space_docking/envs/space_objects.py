@@ -24,7 +24,7 @@ PATH_THRUSTER_SOUND_MAIN = '/assets/thrusters.wav'
 PATH_THRUSTER_SOUND_RETRO = '/assets/retro.wav'
 
 PATH_THRUSTER_MAIN_IMG = '/assets/14x15.png'
-PATH_tHRUSTER_RETRO_IMG = '/assets/1x5.png'
+PATH_tHRUSTER_RETRO_IMG = '/assets/1x3.png'
 
 # ------------------ DISCRETE INPUT VALUES -----------------------
 ACTION_NONE = 0
@@ -122,7 +122,10 @@ class Ship(SpaceObject):
         
         pygame.mixer.init(44100, 16, 2, 4096)
         
-        self.image = pygame.image.load(file_path + PATH_SHIP_0).convert_alpha()
+        self.raw_image = pygame.image.load(file_path+PATH_SHIP_0).convert_alpha()
+        self.image = pygame.Surface((self.raw_image.get_width()*2, self.raw_image.get_height()*2), SRCALPHA).convert_alpha()
+        #self.image_pure = pygame.Surface((self.raw_image.get_width()*2, self.raw_image.get_height()*2), SRCALPHA).convert_alpha()
+        self.image.blit(self.raw_image, (self.raw_image.get_width()/2, self.raw_image.get_height()/2))
         self.surf = self.image
 
         self.thruster_main =  mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
@@ -135,34 +138,47 @@ class Ship(SpaceObject):
         self.main_thruster_active = False
         self.retro_thruster_active = False
         # ------------------- create thruster
-        self.main_thruster_im = SpaceObject()
-        self.main_thruster_im.image = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
-        self.main_thruster_im.root_screen = self.root_screen
-        self.main_thruster_im.pos = self.pos
-        self.main_thruster_im.pivot = self.pos
-        self.main_thruster_im.offset = math.Vector2(1, 56)
+        self.thruster_main_src = pygame.image.load(file_path + PATH_THRUSTER_MAIN_IMG).convert_alpha()
+        self.thruster_retro_src = pygame.image.load(file_path + PATH_tHRUSTER_RETRO_IMG).convert_alpha()
+    
         
-        self.children.append(self.main_thruster_im)
+        #self.children.append(self.main_thruster_im)
         FR = {'pos': (5,10), 'angle':(180)}
         FL = {'pos': (-5,10), 'angle':(180)}
 
         retro_pack = [FR, FL]
         for item in retro_pack:
             pass
+        
+    def set_thruster_input(self, action):
+        #actions 
+        self.image.fill((0,0,0,0))
+        self.image.blit(self.raw_image, (self.raw_image.get_width()/2, self.raw_image.get_height()/2))
+        if action == 1:
+            self.image.blit(self.thruster_main_src, (self.image.get_width()/2 - 7, self.image.get_height()/2 + 51))
+        if action == 2:
 
+            self.image.blit(self.thruster_retro_src, (self.image.get_width()/2 - 4, self.image.get_height()/2 - 51))
+            self.image.blit(self.thruster_retro_src, (self.image.get_width()/2 + 4, self.image.get_height()/2 - 51))
+        pass
 
     def set_main_thruster(self, active):
         if self.main_thruster_active != active:
             self.main_thruster_active = active
             if self.main_thruster_active:
+                self.set_thruster_input(1)
                 mixer.Sound.play(self.thruster_main, -1)
             else:
+                self.set_thruster_input(0)
                 mixer.Sound.stop(self.thruster_main)
     
     def set_retro_thruster(self, active):
         if self.retro_thruster_active != active:
             self.retro_thruster_active = active
             if self.retro_thruster_active:
+
+                self.set_thruster_input(2)
+
                 mixer.Sound.play(self.thruster_retro, -1)
             else:
                 mixer.Sound.stop(self.thruster_retro)
