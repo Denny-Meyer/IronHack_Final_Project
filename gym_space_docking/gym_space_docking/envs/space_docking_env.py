@@ -29,7 +29,6 @@ SCREENFLAGS =  pygame.SCALED | pygame.DOUBLEBUF #| pygame.RESIZABLE
 # increase distance -1
 # decrease distance +1 
 #
-last_distance = 0
 
 
 
@@ -55,7 +54,8 @@ class Space_Docking_Env(gym.Env):
         self.observation_space = spaces.Box(low=0, high=255,
                                         shape=(88, 80), dtype=np.uint8)
         self.action_space =  spaces.Discrete(7)
-        
+        self.reward = 0
+        self.last_distance = 0
 
 
     def init_render(self):        
@@ -74,13 +74,17 @@ class Space_Docking_Env(gym.Env):
         return None #observation
 
     def step(self, action):
-
+        done = False
+        
         #print('action',action)
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         self.handle_input(action)
         self.render()
         observation = pygame.surfarray.array3d(self.map_obs)
-        self.get_reward()
+        self.reward += self.get_reward()
+        if self.check_for_player_collision:
+            self.reward -= 100
+            done = True
         #observation.swapaxes(0,1)
         reward, done, info = 0., False, {}
 
@@ -115,6 +119,8 @@ class Space_Docking_Env(gym.Env):
             #self.player.update()
 
             if self.check_for_player_collision():
+                self.player.handle_input(0)
+                self.player.destroy()
                 self.init_level()
             
             self.get_observation()
@@ -168,22 +174,32 @@ class Space_Docking_Env(gym.Env):
 
     def get_reward(self):
         # check distance to target
+
+        reward = 0
         distance = self.player.pos.distance_to(self.dock.pos)
 
-        if last_distance < distance :
+        if self.last_distance < distance :
             # give penalty
+            reward -= 1
             pass
         else:
             # give bonus
+            reward += 1
+            if distance < 100:
+                reward += 5
             pass
         angle_target = self.dock.rot_angle
         angle_self = self.player.rot_angle
-        if angle_self - angle_target < 5 or angle_self - angle_target > 355:
-            print(angle_self - angle_target)
-        else:
-            print('outside')
-        #print('distance to docking platform', int(distance/2))
 
+        if distance < 100:
+            if angle_self - angle_target < 5 or angle_self - angle_target > 355:
+                print(angle_self - angle_target)
+                reward += 2
+            else:
+                print('outside')
+                reward -= 3
+        #print('distance to docking platform', int(distance/2))
+        return reward
         pass
 
 
@@ -269,7 +285,7 @@ class Space_Docking_Env(gym.Env):
             #self.player.root_screen = self.window
 
 
-            last_distance = self.player.pos.distance_to(self.dock.pos)
+            self.last_distance = self.player.pos.distance_to(self.dock.pos)
 
             pass
 

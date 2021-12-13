@@ -8,7 +8,7 @@ from pygame.locals import *
 import os
 import math as m
 import copy
-
+import time
 file_path = os.path.dirname(os.path.realpath(__file__))
 
 PATH_SHIP_0 = '/assets/med_ship_01.png'
@@ -36,7 +36,7 @@ ACTION_STRAFE_RIGHT = 5
 ACTION_STRAFE_LEFT = 6
 
 
-rotation_max, acceleration_max, retro_max = 0.05, 0.1, 0.02
+rotation_max, acceleration_max, retro_max = 0.05, 0.15, 0.02
 
 print(file_path)
 class SpaceObject(pygame.sprite.Sprite):
@@ -126,7 +126,7 @@ class Ship(SpaceObject):
     def __init__(self, name='', type='', **kwargs):
         super().__init__(name = name, type=type, **kwargs)
         
-        pygame.mixer.init(44100, 16, 2, 4096)
+        self.mixer = pygame.mixer.init(44100, 16, 2, 4096)
         
         self.raw_image = pygame.image.load(file_path+PATH_SHIP_0).convert_alpha()
         self.image = pygame.Surface((self.raw_image.get_width()*2, self.raw_image.get_height()*2), SRCALPHA).convert_alpha()
@@ -155,7 +155,15 @@ class Ship(SpaceObject):
         retro_pack = [FR, FL]
         for item in retro_pack:
             pass
+    
+    def destroy(self):
+        mixer.stop()
+        time.sleep(1)
         
+        #while mixer.get_busy:
+         #   pass
+        #mixer.quit()
+
     def set_thruster_input(self, action):
         #actions 
         self.image.fill((0,0,0,0))
