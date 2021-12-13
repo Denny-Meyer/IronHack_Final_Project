@@ -36,7 +36,7 @@ ACTION_STRAFE_RIGHT = 5
 ACTION_STRAFE_LEFT = 6
 
 
-rotation_max, acceleration_max, retro_max = 0.1, 0.08, 0.025
+rotation_max, acceleration_max, retro_max = 0.05, 0.1, 0.02
 
 print(file_path)
 class SpaceObject(pygame.sprite.Sprite):
@@ -78,7 +78,7 @@ class SpaceObject(pygame.sprite.Sprite):
         elif self.rot_angle > 360:
             self.rot_angle -= 360
         # apply movement to position
-        self.pos = self.pos + (self.vel) #* self.scale)
+        self.pos = self.pos + (self.vel * self.scale)
 
         self.surf, self.rect = self.rotatePivoted(self.image, self.rot_angle, self.pos, self.scale)
         
