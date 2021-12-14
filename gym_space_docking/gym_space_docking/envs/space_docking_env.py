@@ -22,7 +22,7 @@ SCALE = 0.3
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
-
+#SCREENFLAGS = 0
 
 # reward table
 # death -50
@@ -54,12 +54,17 @@ class Space_Docking_Env(gym.Env):
         self.observation_space = spaces.Box(low=0, high=255,
                                         shape=(88, 80), dtype=np.uint8)
         self.action_space =  spaces.Discrete(7)
+        
+        
+        
         self.reward = 0
         self.last_distance = 0
+        self.last_min_distance_step = 0
         self.is_in_docking_range = False
         self.docking_counter = 0
         self.collide_astro = False
         self.frame_counter = 0
+        self.start_distance = 0
 
 
 
@@ -94,14 +99,18 @@ class Space_Docking_Env(gym.Env):
             print('collide')
             self.reward -= 100
             done = True
-        if self.reward < -50:
-            done = True
-            print('over limit')
+        #if self.reward < -50:
+        #    done = True
+        #    print('over limit')
         if self.docking_counter > 100:
-            self.reward += 100
+            self.reward += 50
             done = True
-        if self.frame_counter > 5000:
+
+        if self.player.pos.distance_to(self.dock.pos) > 2 * self.start_distance:
+            self.reward -50
             done = True
+        #if self.frame_counter > 5000:
+       #    done = True
 
         observation = pygame.surfarray.array3d(self.map_obs)
         self.reward += self.get_reward()
@@ -143,7 +152,7 @@ class Space_Docking_Env(gym.Env):
             if self.check_for_player_collision():
                 self.player.handle_input(0)
                 self.collide_astro = True
-            #    self.player.destroy()
+                self.player.destroy()
             #    self.init_level()
             
             self.get_observation()
@@ -186,9 +195,9 @@ class Space_Docking_Env(gym.Env):
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.05)
-        self.map_2 = self.render_scaled(self.map_2, 0.005)
-        self.map_3 = self.render_scaled(self.map_3, 0.001)
-        self.map_4 = self.render_scaled(self.map_4, 0.00009)
+        self.map_2 = self.render_scaled(self.map_2, 0.01)
+        self.map_3 = self.render_scaled(self.map_3, 0.005)
+        self.map_4 = self.render_scaled(self.map_4, 0.0005)
 
         self.map_obs.blit(back_ground,(0,0))
         self.map_obs.blit(map_old, (0,0))
@@ -207,6 +216,33 @@ class Space_Docking_Env(gym.Env):
         reward = 0
         distance = self.player.pos.distance_to(self.dock.pos)
 
+
+        # set start distance
+        if self.start_distance == 0:
+            self.start_distance = distance
+            self.last_min_distance_step = int(distance)
+
+        # create distance rings to 20 steps
+        ring_steps = int(self.start_distance / 20)
+
+        if distance < (self.last_min_distance_step - ring_steps):
+            reward += 10
+            self.last_min_distance_step = self.last_min_distance_step - ring_steps
+            print('passing ring', self.reward)
+        
+
+        angle_target = self.dock.rot_angle
+        angle_self = self.player.rot_angle
+
+        if distance < 100:
+            if angle_self - angle_target < 5 or angle_self - angle_target > 355:
+                print(angle_self - angle_target)
+                reward += 1
+            else:
+                print('outside')
+                reward -= 0.1
+
+        '''
         #if self.last_distance - distance < 100 and 
         if int(self.last_distance) > int(distance):
             # give penalty
@@ -223,8 +259,7 @@ class Space_Docking_Env(gym.Env):
             if distance < 100:
                 reward += 0.5
             
-        angle_target = self.dock.rot_angle
-        angle_self = self.player.rot_angle
+        
 
         if distance < 100:
             if angle_self - angle_target < 5 or angle_self - angle_target > 355:
@@ -235,8 +270,8 @@ class Space_Docking_Env(gym.Env):
                 reward -= 0.3
         #print('distance to docking platform', int(distance/2))
 
-        reward -= 0.01
-
+        #reward -= 0.001
+        '''
 
         return reward
 
@@ -288,20 +323,22 @@ class Space_Docking_Env(gym.Env):
             
 
             self.player = Ship(name='Player', type='ship')
-            self.player.pos = math.Vector2(4000, 300)
+            self.player.pos = math.Vector2(1000, 300)
             
             self.dock = DockingSpot(name='Docking_Spot', type='docking')
-            self.dock.pos = math.Vector2(100, 600)
+            self.dock.pos = math.Vector2(0, 1285)
 
             self.reward = 0
             self.last_distance = 0
+            self.last_min_distance_step = 0
             self.is_in_docking_range = False
             self.docking_counter = 0
             self.collide_astro = False
             self.frame_counter = 0
+            self.start_distance = 0
             
             
-            for i in range(150):
+            for i in range(50):
                 size = 'med'
                 if i % 10 == 0:
                     size = 'L1'
@@ -311,11 +348,11 @@ class Space_Docking_Env(gym.Env):
                 coord = math.Vector2()
                 while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-4800, 4800)
+                    dist = np.random.randint(-3800, 3800)
                     coord.x = dist * np.sin(rn_angle)
                     coord.y = dist * np.cos(rn_angle)
                     
-                    if coord.distance_to(self.dock.pos) > 2500:
+                    if coord.distance_to(self.dock.pos) > 3000:
                         break
                 angle = np.random.randint(0, 360)
                 rot_vel = np.random.uniform(-0.1,0.1)
