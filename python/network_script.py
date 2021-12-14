@@ -132,14 +132,14 @@ while True:
             return np.argmax(q_values)
 
 
-    n_steps = 400000
-    training_start = 10000
+    n_steps = 4000000
+    training_start = 5000
     training_interval = 4
-    save_steps = 50000
+    save_steps = 10000
     copy_steps = 10000
     discont_rate = 0.99
     skip_start = 90
-    batch_size = 100
+    batch_size = 50
     iteration = 0
     checkpoint_path = './docking_dqn.ckpt'
     done = True
@@ -218,6 +218,9 @@ while True:
             if step % save_steps == 0:
                 print('save checkpoint')
                 saver.save(sess, checkpoint_path)
+                rw = open('rewards.txt','w+')
+                rw.write(rewards_counter)
+                rw.close()
                 break
 
             
