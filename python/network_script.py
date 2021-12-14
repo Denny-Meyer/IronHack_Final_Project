@@ -136,7 +136,7 @@ while True:
     training_start = 10000
     training_interval = 4
     save_steps = 500
-    copy_steps = 10000
+    copy_steps = 500
     discont_rate = 0.99
     skip_start = 90
     batch_size = 50
