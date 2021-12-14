@@ -135,11 +135,11 @@ while True:
     n_steps = 400000
     training_start = 10000
     training_interval = 4
-    save_steps = 500
-    copy_steps = 500
+    save_steps = 50000
+    copy_steps = 10000
     discont_rate = 0.99
     skip_start = 90
-    batch_size = 50
+    batch_size = 100
     iteration = 0
     checkpoint_path = './docking_dqn.ckpt'
     done = True

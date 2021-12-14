@@ -106,8 +106,9 @@ class Space_Docking_Env(gym.Env):
             self.reward += 50
             done = True
 
-        if self.player.pos.distance_to(self.dock.pos) > 2 * self.last_min_distance_step:
-            self.reward -=50
+        if self.player.pos.distance_to(self.dock.pos) > 1.2 * self.last_min_distance_step:
+            #self.reward -=50
+
             done = True
         #if self.frame_counter > 5000:
        #    done = True
