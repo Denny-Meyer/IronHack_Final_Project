@@ -106,8 +106,8 @@ class Space_Docking_Env(gym.Env):
             self.reward += 50
             done = True
 
-        if self.player.pos.distance_to(self.dock.pos) > 2 * self.start_distance:
-            self.reward -50
+        if self.player.pos.distance_to(self.dock.pos) > 2 * self.last_min_distance_step:
+            self.reward -=50
             done = True
         #if self.frame_counter > 5000:
        #    done = True
@@ -194,10 +194,10 @@ class Space_Docking_Env(gym.Env):
         map_old.set_alpha(249)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
-        self.map_1 = self.render_scaled(self.map_1, 0.05)
+        self.map_1 = self.render_scaled(self.map_1, 0.09)
         self.map_2 = self.render_scaled(self.map_2, 0.01)
         self.map_3 = self.render_scaled(self.map_3, 0.005)
-        self.map_4 = self.render_scaled(self.map_4, 0.0005)
+        self.map_4 = self.render_scaled(self.map_4, 0.0009)
 
         self.map_obs.blit(back_ground,(0,0))
         self.map_obs.blit(map_old, (0,0))
