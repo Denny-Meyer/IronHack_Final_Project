@@ -133,7 +133,7 @@ while True:
 
 
     n_steps = 4000000
-    training_start = 0#1000
+    training_start = 100#1000
     training_interval = 4
     save_steps = 5000
     copy_steps = 5000
@@ -173,7 +173,7 @@ while True:
             if done:
                 
                 if step > skip_start:
-                    print('step', step, 'iteration', iteration ,'rewards', reward)
+                    print('stp', step, 'it.', iteration ,'pts', reward)
                     rewards_counter.append(reward)
 
 
