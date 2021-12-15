@@ -90,11 +90,12 @@ class Space_Docking_Env(gym.Env):
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         self.handle_input(action)
         
-        self.map_obs = self.get_observation()
+        
         
 
         self.render()
-
+        self.map_obs = self.get_observation()
+        
         if self.collide_astro:
             print('collide')
             self.reward -= 100
