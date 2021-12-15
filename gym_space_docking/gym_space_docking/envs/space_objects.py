@@ -309,7 +309,7 @@ class SpaceStation(SpaceObject):
     def __init__(self, name='', type='', **kwargs) -> None:
         super().__init__(name=name, type=type, **kwargs)
         
-        self.image = pygame.Surface((10,10))
+        self.image = pygame.Surface((0,0))
         #self.surf = pygame.Surface((10,10), pygame.SRCALPHA)
         self.surf = self.image
         self.offset = math.Vector2(5,5)
@@ -328,8 +328,8 @@ class SpaceStation(SpaceObject):
         r4.image = pygame.transform.flip(r4.image, False,True)
         r4.pos = self.pos + (-r4.image.get_width()/2, r4.image.get_height()/2)
         
-        c1 = Station_center_part(name='center')
-        c1.pos = self.pos
+        #c1 = Station_center_part(name='center')
+        #c1.pos = self.pos
         '''
         c1 = Station_center_part('center_top_left')
         c1.pos = self.pos
@@ -359,7 +359,7 @@ class SpaceStation(SpaceObject):
         
         #self.children.append(r2)
         '''
-        self.children.append(c1)
+        #self.children.append(c1)
         self.children.append(r1)
         self.children.append(r2)
         self.children.append(r3)

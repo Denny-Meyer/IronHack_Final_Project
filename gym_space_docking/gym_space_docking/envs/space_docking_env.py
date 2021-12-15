@@ -102,6 +102,8 @@ class Space_Docking_Env(gym.Env):
         #if self.reward < -50:
         #    done = True
         #    print('over limit')
+        if self.docking_counter > 10:
+            self.reward += 5
         if self.docking_counter > 100:
             self.reward += 50
             done = True
@@ -338,7 +340,9 @@ class Space_Docking_Env(gym.Env):
             self.frame_counter = 0
             self.start_distance = 0
             
-            
+            station = SpaceStation(name='Station 42', type='station')
+
+
             for i in range(50):
                 size = 'med'
                 if i % 10 == 0:
@@ -349,11 +353,11 @@ class Space_Docking_Env(gym.Env):
                 coord = math.Vector2()
                 while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-3800, 3800)
+                    dist = np.random.randint(-4800, 4800)
                     coord.x = dist * np.sin(rn_angle)
                     coord.y = dist * np.cos(rn_angle)
                     
-                    if coord.distance_to(self.dock.pos) > 3000:
+                    if coord.distance_to(station.pos) > 3200:
                         break
                 angle = np.random.randint(0, 360)
                 rot_vel = np.random.uniform(-0.1,0.1)
@@ -362,7 +366,7 @@ class Space_Docking_Env(gym.Env):
                 astro.rot_vel = rot_vel
                 self.objects.add(astro)
             
-            station = SpaceStation(name='Station 42', type='station')
+            
             #station.rot_vel = -0.03
             self.objects.add(station)
             self.objects.add(self.dock)
@@ -373,6 +377,16 @@ class Space_Docking_Env(gym.Env):
                 i.scale = self.camera_scale
                 i.root_screen = self.window
             #self.player.root_screen = self.window
+
+            # random player position
+            while True:
+                    rn_angle = np.random.uniform(0, 2*m.pi)
+                    dist = np.random.randint(-3800, 3800)
+                    self.player.pos.x = dist * np.sin(rn_angle)
+                    self.player.pos.y = dist * np.cos(rn_angle)
+                    
+                    if self.player.pos.distance_to(self.dock.pos) > 1000 and self.player.pos.distance_to(self.dock.pos) < 3000:
+                        break 
 
 
             self.last_distance = self.player.pos.distance_to(self.dock.pos)

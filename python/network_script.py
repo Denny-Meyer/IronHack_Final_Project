@@ -133,10 +133,10 @@ while True:
 
 
     n_steps = 4000000
-    training_start = 5000
+    training_start = 1000
     training_interval = 4
-    save_steps = 10000
-    copy_steps = 10000
+    save_steps = 100000
+    copy_steps = 5000
     discont_rate = 0.99
     skip_start = 90
     batch_size = 50
@@ -170,6 +170,7 @@ while True:
                 
                 if step > skip_start:
                     print('episode', step, 'iteration', iteration ,'rewards', reward)
+                    rewards_counter.append(reward)
 
 
                 obs = env.reset()
@@ -185,7 +186,7 @@ while True:
             obs, reward, done, info = env.step(action)
             next_state = preprocess_observations(obs)
 
-            rewards_counter.append(rewards_counter)
+            
 
             # remember what happend
             replay_memory.append((state, action, reward, next_state, 1.0 - done))
@@ -218,8 +219,9 @@ while True:
             if step % save_steps == 0:
                 print('save checkpoint')
                 saver.save(sess, checkpoint_path)
-                rw = open('rewards.txt','w+')
-                rw.write(rewards_counter)
+                rw = open('rewards.txt','a')
+                for elem in rewards_counter:
+                    rw.write(str(elem)+'\n')
                 rw.close()
                 break
 
