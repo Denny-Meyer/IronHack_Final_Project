@@ -1,2 +1,0 @@
-model_checkpoint_path: "docking_dqn.ckpt"
-all_model_checkpoint_paths: "docking_dqn.ckpt"
