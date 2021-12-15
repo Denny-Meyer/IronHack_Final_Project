@@ -133,9 +133,9 @@ while True:
 
 
     n_steps = 4000000
-    training_start = 1000
+    training_start = 0#1000
     training_interval = 4
-    save_steps = 100000
+    save_steps = 5000
     copy_steps = 5000
     discont_rate = 0.99
     skip_start = 90
@@ -154,6 +154,10 @@ while True:
 
     
     with tf.compat.v1.Session() as sess:
+        if os.path.isfile(checkpoint_path + '.meta'):
+            print('restore graph')
+            saver = tf.compat.v1.train.import_meta_graph(checkpoint_path + '.meta')
+
         if os.path.isfile(checkpoint_path + '.index'):
             print('restore session')
             saver.restore(sess, checkpoint_path)
@@ -169,7 +173,7 @@ while True:
             if done:
                 
                 if step > skip_start:
-                    print('episode', step, 'iteration', iteration ,'rewards', reward)
+                    print('step', step, 'iteration', iteration ,'rewards', reward)
                     rewards_counter.append(reward)
 
 

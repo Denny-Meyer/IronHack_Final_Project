@@ -18,3 +18,5 @@ gym_space_docking/gym_space_docking/envs/__pycache__/space_docking_env.cpython-3
 gym_space_docking/gym_space_docking/envs/__pycache__/space_docking_env.cpython-39.pyc
 gym_space_docking/gym_space_docking/envs/__pycache__/space_objects.cpython-39.pyc
 python/docking_dqn.ckpt.index
+python/docking_dqn.ckpt.index
+gym_space_docking/gym_space_docking/envs/__pycache__/space_docking_env.cpython-39.pyc
