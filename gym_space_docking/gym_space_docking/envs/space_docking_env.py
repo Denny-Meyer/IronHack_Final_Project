@@ -22,6 +22,8 @@ SCALE = 0.3
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
+# FULLSCREEN |
+flags =  0#DOUBLEBUF | SCALED #| RESIZABLE
 #SCREENFLAGS = 0
 
 # reward table
@@ -69,7 +71,7 @@ class Space_Docking_Env(gym.Env):
 
 
     def init_render(self):        
-        self.window_display = pygame.display.set_mode(size=(window_width, window_height),flags= SCREENFLAGS)#, vsync=True)
+        self.window_display = pygame.display.set_mode(size=(window_width, window_height),flags= flags, depth=8)#, vsync=True)
         
         
 
@@ -81,7 +83,7 @@ class Space_Docking_Env(gym.Env):
         pygame.mixer.quit()
         
         self.init_level()
-        return None #observation
+        return self.step(0)#None #observation
 
     def step(self, action):
         done = False
@@ -383,11 +385,11 @@ class Space_Docking_Env(gym.Env):
             # random player position
             while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-3800, 3800)
+                    dist = np.random.randint(3800, 10000)
                     self.player.pos.x = dist * np.sin(rn_angle)
                     self.player.pos.y = dist * np.cos(rn_angle)
                     
-                    if self.player.pos.distance_to(self.dock.pos) > 1000 and self.player.pos.distance_to(self.dock.pos) < 3000:
+                    if self.player.pos.distance_to(self.dock.pos) > 5000 and self.player.pos.distance_to(self.dock.pos) < 10000:
                         break 
 
 
