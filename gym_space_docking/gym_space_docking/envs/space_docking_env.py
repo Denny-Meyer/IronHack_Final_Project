@@ -15,6 +15,7 @@ import sys, os, copy, time, random
 
 
 from gym_space_docking.envs.space_objects import *
+from pygame.sprite import collide_mask
 
 local_path = os.path.curdir
 
@@ -243,12 +244,14 @@ class Space_Docking_Env(gym.Env):
 
         if distance < 100:
             if angle_self - angle_target < 5 or angle_self - angle_target > 355:
-                print(angle_self - angle_target)
+                print('inside', angle_self - angle_target)
                 reward += 1
             else:
                 print('outside')
-                reward -= 0.1
+                #reward -= 0.1
 
+        if self.player.rot_vel != 0:
+            reward -= 1
         '''
         #if self.last_distance - distance < 100 and 
         if int(self.last_distance) > int(distance):
@@ -276,9 +279,9 @@ class Space_Docking_Env(gym.Env):
                 print('outside')
                 reward -= 0.3
         #print('distance to docking platform', int(distance/2))
-
-        #reward -= 0.001
         '''
+        reward -= 0.001
+        
 
         return reward
 
@@ -300,11 +303,11 @@ class Space_Docking_Env(gym.Env):
             if self.player.pos.distance_to(i.pos) < 400:
                 #if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
                     
-                i_mask = pygame.mask.from_surface(i.surf)
-                
-                off = (i.pos * self.camera_scale - math.Vector2(i.surf.get_rect().center) * self.camera_scale) - (self.player.pos * self.camera_scale - math.Vector2(self.player.surf.get_rect().center) * self.camera_scale)
+                #i_mask = pygame.mask.from_surface(i.surf)
+                #off = (i.pos - 0.5 * math.Vector2(i.surf.get_rect().center)) * self.camera_scale - (self.player.pos - 0.5*math.Vector2(self.player.surf.get_rect().center)) * self.camera_scale
                 #print(off)
-                col = player_mask.overlap(i_mask, off)
+                #col = player_mask.overlap(i_mask, off)
+                col = collide_mask(self.player, i)
                 if col != None:
                     if i.type == 'asteroid':
                         print(col, i.name)

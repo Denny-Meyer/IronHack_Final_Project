@@ -136,8 +136,8 @@ class Ship(SpaceObject):
 
         self.thruster_main =  mixer.Sound(file_path + PATH_THRUSTER_SOUND_MAIN)
         self.thruster_retro = mixer.Sound(file_path + PATH_THRUSTER_SOUND_RETRO)
-        mixer.Sound.set_volume(self.thruster_main, 0.5)
-        mixer.Sound.set_volume(self.thruster_retro, 0.3)
+        mixer.Sound.set_volume(self.thruster_main, 0.0)
+        mixer.Sound.set_volume(self.thruster_retro, 0.0)
         mixer.Sound.fadeout(self.thruster_main, 10)
         
 
