@@ -1,3 +1,4 @@
+import re
 from numpy.core.fromnumeric import shape
 import pygame
 from pygame import transform, math
@@ -68,6 +69,7 @@ class Space_Docking_Env(gym.Env):
         self.collide_astro = False
         self.frame_counter = 0
         self.start_distance = 0
+        self.player_old_rotation_speed = 0.0
 
 
 
@@ -100,20 +102,21 @@ class Space_Docking_Env(gym.Env):
         self.map_obs = self.get_observation()
         
         if self.collide_astro:
-            print('collide')
-            self.reward -= 100
+            #print('collide')
+            #self.reward -= 100
             done = True
         #if self.reward < -50:
         #    done = True
         #    print('over limit')
-        if self.docking_counter > 10:
-            self.reward += 5
-        if self.docking_counter > 100:
-            self.reward += 150
-            print('finally docked')
-            done = True
+        #if self.docking_counter > 10:
+        #    self.reward += 5
+        #
+        #if self.docking_counter > 100:
+        #    self.reward += 150
+        #    print('finally docked')
+        #    done = True
 
-        if self.player.pos.distance_to(self.dock.pos) > 1.2 * self.last_min_distance_step:
+        if self.player.pos.distance_to(self.dock.pos) > 2 * self.start_distance:
             #self.reward -=50
 
             done = True
@@ -172,6 +175,10 @@ class Space_Docking_Env(gym.Env):
 
             if mode == 'human':
                 pygame.display.update()
+            
+            self.reward += self.get_reward()
+            #print(self.reward, ' ', self.player.rot_vel, ' ', self.player_old_rotation_speed)
+            #print(self.player.rot_vel)
         
 
 
@@ -199,7 +206,7 @@ class Space_Docking_Env(gym.Env):
         map_old = self.map_obs.copy()
         back_ground = self.map_obs.copy()
         back_ground.fill((255,255,255))
-        map_old.set_alpha(249)
+        map_old.set_alpha(230)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.09)
@@ -231,56 +238,30 @@ class Space_Docking_Env(gym.Env):
             self.last_min_distance_step = int(distance)
 
         # create distance rings to 20 steps
-        ring_steps = int(self.start_distance / 20)
+        ring_steps = int(self.start_distance / 1000)
+        
 
         if distance < (self.last_min_distance_step - ring_steps):
-            reward += 10
+            reward += 1
             self.last_min_distance_step = self.last_min_distance_step - ring_steps
-            #print('passing ring', self.reward)
-        
-
-        angle_target = self.dock.rot_angle
-        angle_self = self.player.rot_angle
-
-        if distance < 100:
-            if angle_self - angle_target < 5 or angle_self - angle_target > 355:
-                print('inside', angle_self - angle_target)
-                reward += 1
-            else:
-                print('outside')
-                #reward -= 0.1
-
-        if self.player.rot_vel != 0:
+        elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
             reward -= 1
-        '''
-        #if self.last_distance - distance < 100 and 
-        if int(self.last_distance) > int(distance):
-            # give penalty
-            if self.last_distance - distance > 10:
-                reward += 0.1
-            else:
-                reward += 0.01
-            self.last_distance = distance
-        elif int(self.last_distance) < int(distance):
-        #self.last_distance - distance > 100 and self.last_distance < distance:
-            # give bonus
-            reward -= 0.5
-            self.last_distance = distance
-            if distance < 100:
-                reward += 0.5
-            
+            self.last_min_distance_step = self.last_min_distance_step + ring_steps
         
-
-        if distance < 100:
-            if angle_self - angle_target < 5 or angle_self - angle_target > 355:
-                print(angle_self - angle_target)
-                reward += 0.2
-            else:
-                print('outside')
-                reward -= 0.3
-        #print('distance to docking platform', int(distance/2))
-        '''
-        reward -= 0.001
+        if self.player.rot_vel < -0.001:
+            if self.player.rot_vel < self.player_old_rotation_speed:
+                reward -= 1
+            elif self.player.rot_vel > self.player_old_rotation_speed:
+                reward += 1
+            self.player_old_rotation_speed = self.player.rot_vel
+        elif self.player.rot_vel > 0.001:
+            if self.player.rot_vel > self.player_old_rotation_speed:
+                reward -= 1
+            elif self.player.rot_vel < self.player_old_rotation_speed:
+                reward += 1
+            self.player_old_rotation_speed = self.player.rot_vel
+        #else:
+        #    reward += 0.01
         
 
         return reward
@@ -296,25 +277,17 @@ class Space_Docking_Env(gym.Env):
 # ----------- Simple Physics -----------------------------------------
 
     def check_for_player_collision(self) -> bool:
-        
-        #print(self.player.surf.get_rect())
-        player_mask = pygame.mask.from_surface(self.player.surf)
+
         for i in self.objects:
-            if self.player.pos.distance_to(i.pos) < 400:
-                #if self.player.surf.get_rect().colliderect(i.surf.get_rect()):
-                    
-                #i_mask = pygame.mask.from_surface(i.surf)
-                #off = (i.pos - 0.5 * math.Vector2(i.surf.get_rect().center)) * self.camera_scale - (self.player.pos - 0.5*math.Vector2(self.player.surf.get_rect().center)) * self.camera_scale
-                #print(off)
-                #col = player_mask.overlap(i_mask, off)
+            if self.player.pos.distance_to(i.pos) < 800:
                 col = collide_mask(self.player, i)
                 if col != None:
                     if i.type == 'asteroid':
-                        print(col, i.name)
+                        #print(col, i.name)
                         self.collide_astro = True
                         return True
                     elif i.type == 'docking':
-                        print('on docking field')
+                        #print('on docking field')
                         self.is_in_docking_range = True
                         self.docking_counter += 1
                     else:
@@ -377,6 +350,7 @@ class Space_Docking_Env(gym.Env):
             #station.rot_vel = -0.03
             self.objects.add(station)
             self.objects.add(self.dock)
+            
             self.objects.add(self.player)
             
             for i in self.objects:
