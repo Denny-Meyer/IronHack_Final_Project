@@ -238,11 +238,11 @@ class Space_Docking_Env(gym.Env):
             self.last_min_distance_step = int(distance)
 
         # create distance rings to 20 steps
-        ring_steps = int(self.start_distance / 1000)
+        ring_steps = int(self.start_distance / 10000)
         
 
         if distance < (self.last_min_distance_step - ring_steps):
-            reward += 1
+            reward += 2
             self.last_min_distance_step = self.last_min_distance_step - ring_steps
         elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
             reward -= 1
@@ -252,13 +252,13 @@ class Space_Docking_Env(gym.Env):
             if self.player.rot_vel < self.player_old_rotation_speed:
                 reward -= 1
             elif self.player.rot_vel > self.player_old_rotation_speed:
-                reward += 1
+                reward += 1.5
             self.player_old_rotation_speed = self.player.rot_vel
         elif self.player.rot_vel > 0.001:
             if self.player.rot_vel > self.player_old_rotation_speed:
                 reward -= 1
             elif self.player.rot_vel < self.player_old_rotation_speed:
-                reward += 1
+                reward += 1.5
             self.player_old_rotation_speed = self.player.rot_vel
         #else:
         #    reward += 0.01
@@ -333,7 +333,7 @@ class Space_Docking_Env(gym.Env):
                 coord = math.Vector2()
                 while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-4800, 4800)
+                    dist = np.random.randint(-6000, 6000)
                     coord.x = dist * np.sin(rn_angle)
                     coord.y = dist * np.cos(rn_angle)
                     
