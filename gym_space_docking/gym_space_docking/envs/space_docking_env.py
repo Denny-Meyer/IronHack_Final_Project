@@ -70,6 +70,7 @@ class Space_Docking_Env(gym.Env):
         self.frame_counter = 0
         self.start_distance = 0
         self.player_old_rotation_speed = 0.0
+        self.rotation_penalty = 0
 
 
 
@@ -177,7 +178,7 @@ class Space_Docking_Env(gym.Env):
                 pygame.display.update()
             
             self.reward += self.get_reward()
-            #print(self.reward, ' ', self.player.rot_vel, ' ', self.player_old_rotation_speed)
+            #print(self.reward, ' ', self.player.rot_vel, ' ', self.player_old_rotation_speed, ' ', self.rotation_penalty)
             #print(self.player.rot_vel)
         
 
@@ -238,28 +239,32 @@ class Space_Docking_Env(gym.Env):
             self.last_min_distance_step = int(distance)
 
         # create distance rings to 20 steps
-        ring_steps = int(self.start_distance / 10000)
-        
+        ring_steps = int(self.start_distance / 200)
+        rot_vel_steps = 0.1
 
         if distance < (self.last_min_distance_step - ring_steps):
-            reward += 2
+            reward += 1
             self.last_min_distance_step = self.last_min_distance_step - ring_steps
         elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
             reward -= 1
             self.last_min_distance_step = self.last_min_distance_step + ring_steps
         
-        if self.player.rot_vel < -0.001:
-            if self.player.rot_vel < self.player_old_rotation_speed:
-                reward -= 1
-            elif self.player.rot_vel > self.player_old_rotation_speed:
-                reward += 1.5
-            self.player_old_rotation_speed = self.player.rot_vel
-        elif self.player.rot_vel > 0.001:
-            if self.player.rot_vel > self.player_old_rotation_speed:
-                reward -= 1
-            elif self.player.rot_vel < self.player_old_rotation_speed:
-                reward += 1.5
-            self.player_old_rotation_speed = self.player.rot_vel
+
+        rot_res = 0
+        if self.player.rot_vel < -0.01:
+            rot_res = int(self.player.rot_vel / rot_vel_steps)
+            if -self.rotation_penalty != rot_res:
+                reward -= -self.rotation_penalty - rot_res
+                self.rotation_penalty = -rot_res
+        elif self.player.rot_vel > 0.01:
+            rot_res = -int(self.player.rot_vel / rot_vel_steps)
+            if -self.rotation_penalty != rot_res:
+                reward -= -self.rotation_penalty - rot_res
+                self.rotation_penalty = -rot_res
+        else:
+            self.rotation_penalty = 0
+
+
         #else:
         #    reward += 0.01
         
