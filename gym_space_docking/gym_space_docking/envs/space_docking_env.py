@@ -115,6 +115,8 @@ class Space_Docking_Env(gym.Env):
         #    self.reward += 150
         #    print('finally docked')
         #    done = True
+        if self.player.pos.distance_to(self.dock.pos) > self.last_min_distance_step:
+            done = True
 
         if self.player.pos.distance_to(self.dock.pos) > 1.2 * self.start_distance:
             #self.reward -=50
@@ -247,7 +249,7 @@ class Space_Docking_Env(gym.Env):
         elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
             reward -= 10
             self.last_min_distance_step = self.last_min_distance_step + ring_steps
-        
+            
 
         rot_res = 0
         if self.player.rot_vel < -0.01:
