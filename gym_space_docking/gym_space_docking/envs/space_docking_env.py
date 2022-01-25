@@ -25,7 +25,7 @@ window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
 # FULLSCREEN |
-flags =  0#DOUBLEBUF | SCALED #| RESIZABLE
+flags =  DOUBLEBUF | SCALED | RESIZABLE
 #SCREENFLAGS = 0
 
 # reward table
@@ -92,7 +92,6 @@ class Space_Docking_Env(gym.Env):
     def step(self, action):
         done = False
         
-        #print('action',action)
         # action[0]: acceleration | action[1]: rotation action[2]: strafe_sideway
         self.handle_input(action)
         
@@ -104,7 +103,7 @@ class Space_Docking_Env(gym.Env):
         
         if self.collide_astro:
             #print('collide')
-            #self.reward -= 100
+            self.reward -= 100
             done = True
         #if self.reward < -50:
         #    done = True
@@ -117,7 +116,7 @@ class Space_Docking_Env(gym.Env):
         #    print('finally docked')
         #    done = True
 
-        if self.player.pos.distance_to(self.dock.pos) > 2 * self.start_distance:
+        if self.player.pos.distance_to(self.dock.pos) > 1.2 * self.start_distance:
             #self.reward -=50
 
             done = True
@@ -207,7 +206,7 @@ class Space_Docking_Env(gym.Env):
         map_old = self.map_obs.copy()
         back_ground = self.map_obs.copy()
         back_ground.fill((255,255,255))
-        map_old.set_alpha(230)
+        map_old.set_alpha(250)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.09)
@@ -243,10 +242,10 @@ class Space_Docking_Env(gym.Env):
         rot_vel_steps = 0.1
 
         if distance < (self.last_min_distance_step - ring_steps):
-            reward += 1
+            reward += 10
             self.last_min_distance_step = self.last_min_distance_step - ring_steps
         elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
-            reward -= 1
+            reward -= 10
             self.last_min_distance_step = self.last_min_distance_step + ring_steps
         
 
@@ -267,7 +266,7 @@ class Space_Docking_Env(gym.Env):
 
         #else:
         #    reward += 0.01
-        
+        reward -= 0.01
 
         return reward
 
@@ -324,11 +323,13 @@ class Space_Docking_Env(gym.Env):
             self.collide_astro = False
             self.frame_counter = 0
             self.start_distance = 0
+
+            self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
             
             station = SpaceStation(name='Station 42', type='station')
 
 
-            for i in range(50):
+            for i in range(0):
                 size = 'med'
                 if i % 10 == 0:
                     size = 'L1'
