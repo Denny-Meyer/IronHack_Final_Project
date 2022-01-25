@@ -244,10 +244,10 @@ class Space_Docking_Env(gym.Env):
         rot_vel_steps = 0.1
 
         if distance < (self.last_min_distance_step - ring_steps):
-            reward += 10
+            reward += 0.5
             self.last_min_distance_step = self.last_min_distance_step - ring_steps
         elif distance > (self.last_min_distance_step + ring_steps) and distance < self.start_distance + 1:
-            reward -= 10
+            reward -= 0.5
             self.last_min_distance_step = self.last_min_distance_step + ring_steps
             
 
