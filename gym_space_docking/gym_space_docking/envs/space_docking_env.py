@@ -25,7 +25,7 @@ window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
 # FULLSCREEN |
-flags =  DOUBLEBUF | SCALED | RESIZABLE
+flags =  DOUBLEBUF | RESIZABLE #| SCALED
 #SCREENFLAGS = 0
 
 # reward table
@@ -341,7 +341,7 @@ class Space_Docking_Env(gym.Env):
                 coord = math.Vector2()
                 while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(-6000, 6000)
+                    dist = np.random.randint(-10000, 10000)
                     coord.x = dist * np.sin(rn_angle)
                     coord.y = dist * np.cos(rn_angle)
                     
