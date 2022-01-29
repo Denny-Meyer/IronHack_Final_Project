@@ -373,11 +373,11 @@ class Space_Docking_Env(gym.Env):
             # random player position
             while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(3800, 10000)
+                    dist = np.random.randint(2000)#, 2000)
                     self.player.pos.x = dist * np.sin(rn_angle)
                     self.player.pos.y = dist * np.cos(rn_angle)
                     
-                    if self.player.pos.distance_to(self.dock.pos) > 5000 and self.player.pos.distance_to(self.dock.pos) < 10000:
+                    if self.player.pos.distance_to(self.dock.pos) > 100 and self.player.pos.distance_to(self.dock.pos) < 10000:
                         break 
 
 
