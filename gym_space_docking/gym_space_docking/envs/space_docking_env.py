@@ -209,7 +209,7 @@ class Space_Docking_Env(gym.Env):
         map_old = self.map_obs.copy()
         back_ground = self.map_obs.copy()
         back_ground.fill((255,255,255))
-        map_old.set_alpha(128)
+        map_old.set_alpha(200)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.08)
