@@ -70,6 +70,7 @@ class Space_Docking_Env(gym.Env):
         self.frame_counter = 0
         self.start_distance = 0
         self.player_old_rotation_speed = 0.0
+        self.player_old_vel = 0
         self.rotation_penalty = 0
 
 
@@ -208,20 +209,25 @@ class Space_Docking_Env(gym.Env):
         map_old = self.map_obs.copy()
         back_ground = self.map_obs.copy()
         back_ground.fill((255,255,255))
-        map_old.set_alpha(250)
+        map_old.set_alpha(128)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
-        self.map_1 = self.render_scaled(self.map_1, 0.09)
+        self.map_1 = self.render_scaled(self.map_1, 0.08)
         self.map_2 = self.render_scaled(self.map_2, 0.01)
         self.map_3 = self.render_scaled(self.map_3, 0.005)
-        self.map_4 = self.render_scaled(self.map_4, 0.0009)
+        self.map_4 = self.render_scaled(self.map_4, 0.0005)
 
         self.map_obs.blit(back_ground,(0,0))
-        self.map_obs.blit(map_old, (0,0))
+        
+        
         self.map_obs.blit(self.map_1, (0,0))
         self.map_obs.blit(self.map_2, (44, 0))
         self.map_obs.blit(self.map_3, (0, 40))
         self.map_obs.blit(self.map_4, (44, 40))
+        
+        #redraw old map over latest
+        self.map_obs.blit(map_old, (0,0))
+        
         
         return self.map_obs
 
@@ -264,9 +270,12 @@ class Space_Docking_Env(gym.Env):
                 self.rotation_penalty = -rot_res
         else:
             self.rotation_penalty = 0
-
-        if self.player.vel.length() > 0.1:
-            pass
+        #print(self.player.vel.length())
+        if self.player.vel.length() > self.player_old_vel:
+            reward -= self.player.vel.length() #/ 2
+        elif self.player.vel.length() < self.player_old_vel:
+            reward += self.player_old_vel #/ 2
+        self.player_old_vel = self.player.vel.length()
 
 
         #else:
@@ -373,11 +382,11 @@ class Space_Docking_Env(gym.Env):
             # random player position
             while True:
                     rn_angle = np.random.uniform(0, 2*m.pi)
-                    dist = np.random.randint(2000)#, 2000)
+                    dist = np.random.randint(10000)#, 2000)
                     self.player.pos.x = dist * np.sin(rn_angle)
                     self.player.pos.y = dist * np.cos(rn_angle)
                     
-                    if self.player.pos.distance_to(self.dock.pos) > 100 and self.player.pos.distance_to(self.dock.pos) < 10000:
+                    if self.player.pos.distance_to(self.dock.pos) > 1000 and self.player.pos.distance_to(self.dock.pos) < 100000:
                         break 
 
 
