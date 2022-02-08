@@ -44,7 +44,7 @@ class Space_Docking_Env(gym.Env):
 
 
         # set frame drop for 4 frames beteen every observation frame
-        self.skip_frames = 10
+        self.skip_frames = 4
 
 
 
