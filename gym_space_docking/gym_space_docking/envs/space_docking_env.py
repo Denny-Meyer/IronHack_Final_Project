@@ -42,6 +42,12 @@ class Space_Docking_Env(gym.Env):
         self.camera_pos = math.Vector2(0,0)
         self.camera_scale = SCALE
 
+
+        # set frame drop for 4 frames beteen every observation frame
+        self.skip_frames = 4
+
+
+
         pygame.init()
         self.clock = pygame.time.Clock()
         
@@ -135,9 +141,20 @@ class Space_Docking_Env(gym.Env):
         self.frame_counter +=1
         return observation, self.reward, done, info
     
+    def skip_render(self):
+        for i in range(self.skip_frames):
+            for obj in self.objects:
+                obj.root_screen = self.window
+                obj.scale = self.camera_scale
+                obj.camera_pos = self.camera_pos #+ math.Vector2(window_width/2,window_height/2)
+                obj.update()
+            
+
 
     def render(self, mode='human', close=False):
-        
+
+            if self.skip_frames != 0:
+                self.skip_render()
         
             self.window_display.fill((5,52,103))
             self.window.fill((5,52,103))
@@ -164,7 +181,9 @@ class Space_Docking_Env(gym.Env):
 
             self.collide_astro = False
             if self.check_for_player_collision():
-                self.player.handle_input(0)
+                
+                #self.player.handle_input(0)
+                
                 self.collide_astro = True
                 self.player.destroy()
             #    self.init_level()
@@ -226,7 +245,7 @@ class Space_Docking_Env(gym.Env):
         self.map_obs.blit(self.map_4, (44, 40))
         
         #redraw old map over latest
-        self.map_obs.blit(map_old, (0,0))
+        #self.map_obs.blit(map_old, (0,0))
         
         
         return self.map_obs
