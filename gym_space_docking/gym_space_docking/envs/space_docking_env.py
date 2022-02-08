@@ -44,7 +44,7 @@ class Space_Docking_Env(gym.Env):
 
 
         # set frame drop for 4 frames beteen every observation frame
-        self.skip_frames = 4
+        self.skip_frames = 10
 
 
 
@@ -238,14 +238,15 @@ class Space_Docking_Env(gym.Env):
 
         self.map_obs.blit(back_ground,(0,0))
         
-        
+        #self.map_obs.blit(map_old, (0,0))
+
         self.map_obs.blit(self.map_1, (0,0))
         self.map_obs.blit(self.map_2, (44, 0))
         self.map_obs.blit(self.map_3, (0, 40))
         self.map_obs.blit(self.map_4, (44, 40))
         
         #redraw old map over latest
-        #self.map_obs.blit(map_old, (0,0))
+        
         
         
         return self.map_obs
