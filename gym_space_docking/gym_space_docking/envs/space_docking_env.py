@@ -23,7 +23,7 @@ local_path = os.path.curdir
 SCALE = 0.3
 window_width, window_height = 320, 200#1200, 640
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
-SCREENFLAGS =  pygame.SCALED #| pygame.RESIZABLE 
+SCREENFLAGS =  pygame.SCALED | pygame.RESIZABLE 
 # FULLSCREEN |
 flags =  DOUBLEBUF | RESIZABLE #| SCALED
 #SCREENFLAGS = 0
@@ -132,6 +132,7 @@ class Space_Docking_Env(gym.Env):
         #if self.frame_counter > 5000:
        #    done = True
 
+        #observation = pygame.surfarray.array2d(self.map_obs)
         observation = pygame.surfarray.array3d(self.map_obs)
         self.reward += self.get_reward()
         observation.swapaxes(0,1)
@@ -142,6 +143,7 @@ class Space_Docking_Env(gym.Env):
         return observation, self.reward, done, info
     
     def skip_render(self):
+        #print('skip frames')
         for i in range(self.skip_frames):
             for obj in self.objects:
                 obj.root_screen = self.window
@@ -225,10 +227,10 @@ class Space_Docking_Env(gym.Env):
     
     def get_observation(self):
         
-        map_old = self.map_obs.copy()
+        #map_old = self.map_obs.copy()
         back_ground = self.map_obs.copy()
         back_ground.fill((255,255,255))
-        map_old.set_alpha(200)
+        #map_old.set_alpha(200)
         
         self.map_obs = pygame.Surface((88,80), pygame.SRCALPHA)
         self.map_1 = self.render_scaled(self.map_1, 0.08)
@@ -363,7 +365,7 @@ class Space_Docking_Env(gym.Env):
             station = SpaceStation(name='Station 42', type='station')
 
 
-            for i in range(0):
+            for i in range(50):
                 size = 'med'
                 if i % 10 == 0:
                     size = 'L1'
